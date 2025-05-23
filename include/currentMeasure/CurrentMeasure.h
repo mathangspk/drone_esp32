@@ -1,12 +1,12 @@
-#ifndef BATTERY_MONITOR_H
-#define BATTERY_MONITOR_H
+#ifndef CURRENT_MONITOR_H
+#define CURRENT_MONITOR_H
 
 #include <Arduino.h>
 
-class BatteryMonitor
+class CurrentMonitor
 {
 public:
-    BatteryMonitor(uint8_t adcPin, float vRef = 3.7466, int adcMax = 4095, float scale = 4.06658, float offset = 0);
+    CurrentMonitor(uint8_t adcPin, float vRef = 3.7466, int adcMax = 4095, float scale = 2, float offset = 0);
     void begin();
     float readVoltage(); // Trả về điện áp thực tế (V)
     int readRaw();       // Trả về giá trị ADC thô

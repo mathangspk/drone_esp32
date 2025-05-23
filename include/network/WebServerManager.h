@@ -7,11 +7,13 @@
 #include <systemState/StatusLED.h>
 #include <devices/MPU6500.h>
 #include <battery/BatteryMonitor.h>
+#include <currentMeasure/CurrentMeasure.h>
+
 
 class WebServerManager
 {
 public:
-    WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &battery);
+    WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &battery, CurrentMonitor &current);
     void begin();
     void handleClient();
 
@@ -23,6 +25,7 @@ private:
     StatusLED &_statusLED;
     MPU6500 &_mpu6500;
     BatteryMonitor &_battery;
+    CurrentMonitor &_current;
     void setupRoutes();
 };
 

@@ -4,6 +4,7 @@
 #include <systemState/StatusLED.h>
 #include <devices/MPU6500.h>
 #include <battery/BatteryMonitor.h>
+#include <currentMeasure/CurrentMeasure.h>
 
 #define STATUS_LED_PIN 2
 
@@ -14,7 +15,8 @@ ESCController escController;
 StatusLED statusLed(STATUS_LED_PIN);
 MPU6500 mpu(5);
 BatteryMonitor battery(33);
-WebServerManager webServer(ssid, password, escController, statusLed, mpu, battery);
+CurrentMonitor current(34);
+WebServerManager webServer(ssid, password, escController, statusLed, mpu, battery, current);
 
 void setup()
 {
@@ -25,6 +27,7 @@ void setup()
 
   mpu.begin();
   battery.begin();
+  current.begin();
 
   escController.begin();
 
@@ -37,6 +40,7 @@ void loop()
 {
   // statusLed.blink(2000, 100);
   webServer.handleClient();
-  // battery.readVoltage();
-  // delay(1000);
+   //battery.readVoltage();
+   //current.readVoltage();
+   //delay(1000);
 }

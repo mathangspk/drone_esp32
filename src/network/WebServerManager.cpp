@@ -1,7 +1,7 @@
 #include "network/WebServerManager.h"
 
-WebServerManager::WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &batteryMonitor)
-    : _ssid(ssid), _password(password), server(80), _esc(escController), _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor) {}
+WebServerManager::WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &batteryMonitor, CurrentMonitor &currentMonitor)
+    : _ssid(ssid), _password(password), server(80), _esc(escController), _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor), _current(currentMonitor) {}
 
 void WebServerManager::begin()
 {
@@ -148,6 +148,7 @@ void WebServerManager::setupRoutes()
   </div>
 
   <div id="batteryVoltage">Voltage: -- V</div>
+   <div id="currentESC">Current: -- A</div>
 
   <script>
     let setValue = 0;
@@ -235,7 +236,16 @@ void WebServerManager::setupRoutes()
               document.getElementById("batteryVoltage").innerText = `Voltage: ${data.voltage} V`;
           });
   }
-  setInterval(updateBattery, 2000);  // Cập nhật mỗi 2 giây
+
+   function updateCurrent() {
+      fetch("/current")
+          .then(res => res.json())
+          .then(data => {
+              document.getElementById("currentESC").innerText = `Current: ${data.currentESC} A`;
+          });
+  }
+  setInterval(updateBattery, 1000);  // Cập nhật mỗi 1 giây
+  setInterval(updateCurrent, 1000);  // Cập nhật mỗi 1 giây
   setInterval(fetchSensorData, 500);
   </script>
 </body>
@@ -283,5 +293,11 @@ void WebServerManager::setupRoutes()
             {
       float voltage = _battery.readVoltage();
       String json = "{\"voltage\":" + String(voltage, 2) + "}";
+      server.send(200, "application/json", json); });
+
+   server.on("/current", [this]()
+            {
+      float current = _current.readVoltage();
+      String json = "{\"currentESC\":" + String(current, 2) + "}";
       server.send(200, "application/json", json); });
 }

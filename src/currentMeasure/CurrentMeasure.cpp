@@ -1,25 +1,25 @@
-#include "battery/BatteryMonitor.h"
+#include "currentMeasure/CurrentMeasure.h"
 
-BatteryMonitor::BatteryMonitor(uint8_t adcPin, float vRef, int adcMax, float scale, float offset)
+CurrentMonitor::CurrentMonitor(uint8_t adcPin, float vRef, int adcMax, float scale, float offset)
     : _adcPin(adcPin), _vRef(vRef), _adcMax(adcMax), _scale(scale), _offset(offset) {}
 
-void BatteryMonitor::begin()
+void CurrentMonitor::begin()
 {
     analogReadResolution(12);                   // ESP32 mặc định 12-bit
     analogSetPinAttenuation(_adcPin, ADC_11db); // cho phép đo đến ~3.3V
 }
 
-int BatteryMonitor::readRaw()
+int CurrentMonitor::readRaw()
 {
     return analogRead(_adcPin);
 }
 
 // Hàm nội suy tuyến tính giữa hai điểm
-float BatteryMonitor::interpolate(float x, float x0, float x1, float y0, float y1) {
+float CurrentMonitor::interpolate(float x, float x0, float x1, float y0, float y1) {
     return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 }
 
-float BatteryMonitor::readVoltage()
+float CurrentMonitor::readVoltage()
 {
     int raw = readRaw();
     //float adcVoltage = raw * 0.000722 + 0.210;
@@ -48,9 +48,12 @@ float BatteryMonitor::readVoltage()
     } else {
         adcVoltage =  interpolate(raw, 4304, 4058, 3.057, 3.197); //13.0
     }
-    float voltage = adcVoltage * _scale + _offset;
-    //Serial.printf("ADC Raw: %d, Pin Voltage: %.3fV, Battery Voltage: %.3fV\n", raw, adcVoltage, voltage);
-    return voltage;
+    float current = 10*(adcVoltage * _scale - 2.5);
+    if (current < 0) {
+        current = 0;
+    }
+    //Serial.printf("ADC Raw: %d, Pin Voltage: %.3fV, Current: %.3fA\n", raw, adcVoltage, current);
+    return current;
 }
 
 
