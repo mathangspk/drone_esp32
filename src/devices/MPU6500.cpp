@@ -10,6 +10,12 @@ void MPU6500::begin()
 
     writeRegister(0x6B, 0x00); // Wake up MPU-6500
     writeRegister(0x19, 0x00); // Max sample rate
+
+    // Cấu hình gyroscope ±500°/s
+    writeRegister(0x1B, 0x08); // 0000 1000b
+    
+    // Cấu hình accelerometer ±4g
+    writeRegister(0x1C, 0x08); // 0000 1000b
 }
 SensorData MPU6500::getData()
 {
@@ -26,6 +32,18 @@ SensorData MPU6500::getData()
     int16_t gyRaw = (buffer[10] << 8) | buffer[11];
     int16_t gzRaw = (buffer[12] << 8) | buffer[13];
 
+
+      // Cho thang đo ±4g
+    data.ax = axRaw / 8192.0;  // thay vì 16384.0
+    data.ay = ayRaw / 8192.0;
+    data.az = azRaw / 8192.0;
+
+    data.temp = (tempRaw / 340.0) + 36.53;
+    // Cho thang đo ±500°/s
+    data.gx = gxRaw / 65.5;    // thay vì 131.0
+    data.gy = gyRaw / 65.5;
+    data.gz = gzRaw / 65.5;
+    /*
     data.ax = axRaw / 16384.0;
     data.ay = ayRaw / 16384.0;
     data.az = azRaw / 16384.0;
@@ -33,7 +51,7 @@ SensorData MPU6500::getData()
     data.gx = gxRaw / 131.0;
     data.gy = gyRaw / 131.0;
     data.gz = gzRaw / 131.0;
-
+ */
     return data;
 }
 void MPU6500::readSensor()
@@ -49,6 +67,14 @@ void MPU6500::readSensor()
     int16_t gy = (buffer[10] << 8) | buffer[11];
     int16_t gz = (buffer[12] << 8) | buffer[13];
 
+    accelX = ax / 8192.0;
+    accelY = ay / 8192.0;
+    accelZ = az / 8192.0;
+    temperature = (tempRaw / 340.0) + 36.53;
+    gyroX = gx / 65.5;
+    gyroY = gy / 65.5;
+    gyroZ = gz / 65.5;
+    /*
     accelX = ax / 16384.0;
     accelY = ay / 16384.0;
     accelZ = az / 16384.0;
@@ -56,6 +82,8 @@ void MPU6500::readSensor()
     gyroX = gx / 131.0;
     gyroY = gy / 131.0;
     gyroZ = gz / 131.0;
+
+    */
 }
 
 float MPU6500::getAccelX() const { return accelX; }

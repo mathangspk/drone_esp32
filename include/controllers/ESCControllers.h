@@ -21,6 +21,9 @@ public:
     void stopAll();
     uint8_t getCurrentValue(ESC_ID esc);
 
+    // Hàm mix động cơ cho quad X
+    // throttle: 0-100 (%), roll/pitch/yaw: -1.0 ~ 1.0
+    void mixAndSetMotors(float throttle, float roll, float pitch, float yaw);
 private:
     static const int escPins[4];
     static const int escChannels[4];

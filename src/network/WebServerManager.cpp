@@ -1,7 +1,9 @@
 #include "network/WebServerManager.h"
 
-WebServerManager::WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &batteryMonitor, CurrentMonitor &currentMonitor)
-    : _ssid(ssid), _password(password), server(80), _esc(escController), _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor), _current(currentMonitor) {}
+WebServerManager::WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &batteryMonitor,
+   CurrentMonitor &currentMonitor, BME280Sensor &bme)
+    : _ssid(ssid), _password(password), server(80), _esc(escController), _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor),
+     _current(currentMonitor), _bme280(bme) {}
 
 void WebServerManager::begin()
 {
@@ -148,7 +150,12 @@ void WebServerManager::setupRoutes()
   </div>
 
   <div id="batteryVoltage">Voltage: -- V</div>
-   <div id="currentESC">Current: -- A</div>
+  <div id="currentESC">Current: -- A</div>
+  <div id="bme280Temp">Temp: -- C</div>
+  <div id="bme280Pressure">Pressure: -- Mpa</div>
+  <div id="bmeHumidity">Humidity: -- %</div>
+  <h3>Attitude Estimation</h3>
+  <div id="attitudeData">Roll: --°, Pitch: --°, Yaw: --°</div>
 
   <script>
     let setValue = 0;
@@ -244,9 +251,30 @@ void WebServerManager::setupRoutes()
               document.getElementById("currentESC").innerText = `Current: ${data.currentESC} A`;
           });
   }
+
+    function updateBme280() {
+      fetch("/bme")
+          .then(res => res.json())
+          .then(data => {
+              document.getElementById("bme280Pressure").innerText = `Pressure: ${data.bme280Pressure} Mpa`;
+          });
+  }
+
+  function updateAttitude() {
+  fetch("/attitude")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("attitudeData").innerText =
+        `Roll: ${data.roll.toFixed(2)}°, Pitch: ${data.pitch.toFixed(2)}°, Yaw: ${data.yaw.toFixed(2)}°`;
+    });
+}
+
   setInterval(updateBattery, 1000);  // Cập nhật mỗi 1 giây
   setInterval(updateCurrent, 1000);  // Cập nhật mỗi 1 giây
   setInterval(fetchSensorData, 500);
+  setInterval(updateBme280, 2000);
+  setInterval(updateAttitude, 500);
+
   </script>
 </body>
 </html>
@@ -291,13 +319,20 @@ void WebServerManager::setupRoutes()
 
   server.on("/battery", [this]()
             {
-      float voltage = _battery.readVoltage();
+      float voltage = _battery.getVoltage();
       String json = "{\"voltage\":" + String(voltage, 2) + "}";
       server.send(200, "application/json", json); });
 
    server.on("/current", [this]()
             {
-      float current = _current.readVoltage();
+      float current = _current.getCurrent();
       String json = "{\"currentESC\":" + String(current, 2) + "}";
       server.send(200, "application/json", json); });
+
+    server.on("/bme", [this]()
+      {
+      float pressure = _bme280.readPressure();
+      String json = "{\"bme280Pressure\":" + String(pressure, 2) + "}";
+      server.send(200, "application/json", json); });
+  
 }

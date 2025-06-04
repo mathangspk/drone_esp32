@@ -1,7 +1,7 @@
 #include "controllers/ESCControllers.h"
 
 // Cấu hình chân điều khiển ESC và kênh PWM
-const int ESCController::escPins[4] = {16, 17, 26, 27};
+const int ESCController::escPins[4] = {17, 27, 4, 26};
 const int ESCController::escChannels[4] = {0, 1, 2, 3};
 
 ESCController::ESCController()
@@ -57,4 +57,22 @@ uint8_t ESCController::getCurrentValue(ESC_ID esc)
 uint32_t ESCController::microsecondsToDuty(uint16_t us)
 {
     return (uint32_t)us * 65535 / 20000; // 20ms = 1 chu kỳ ở 50Hz
+}
+
+void ESCController::mixAndSetMotors(float throttle, float roll, float pitch, float yaw)
+{
+    // Công thức mix chuẩn Quad X (giống Betaflight)
+    // Motor order: FL, FR, RL, RR
+    float motor[4];
+    motor[ESC_FL] = throttle + pitch + roll - yaw; // Front Left (CCW)
+    motor[ESC_FR] = throttle + pitch - roll + yaw; // Front Right (CW)
+    motor[ESC_RL] = throttle - pitch + roll + yaw; // Rear Left (CW)
+    motor[ESC_RR] = throttle - pitch - roll - yaw; // Rear Right (CCW)
+
+    // Giới hạn giá trị 0-100%
+    for (int i = 0; i < 4; i++) {
+        if (motor[i] > 100.0f) motor[i] = 100.0f;
+        if (motor[i] < 0.0f) motor[i] = 0.0f;
+        setESCValue((ESC_ID)i, (uint8_t)motor[i]);
+    }
 }
