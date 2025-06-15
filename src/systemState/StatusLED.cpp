@@ -36,3 +36,25 @@ void StatusLED::blink(uint16_t duration_ms, uint8_t times)
         delay(duration_ms);
     }
 }
+// Nháy 5Hz cho operator mode
+void StatusLED::blinkOperator()
+{
+    _interval = 100; // 5Hz = 100ms
+}
+
+// Nháy 1Hz cho config mode
+void StatusLED::blinkConfig()
+{
+    _interval = 500; // 1Hz = 500ms
+}
+
+// Gọi hàm này trong vòng lặp để cập nhật trạng thái LED
+void StatusLED::update()
+{
+    unsigned long now = millis();
+    if (now - _lastToggle >= _interval)
+    {
+        toggle();
+        _lastToggle = now;
+    }
+}

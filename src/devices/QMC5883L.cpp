@@ -82,7 +82,7 @@ void QMC5883L::readMag(float &mx, float &my, float &mz) {
     int16_t z = (int16_t)(buffer[5] << 8 | buffer[4]);
     
     // In ra giá trị thô để debug
-    Serial.printf("Raw mag data: X=%d Y=%d Z=%d\n", x, y, z);
+    //Serial.printf("Raw mag data: X=%d Y=%d Z=%d\n", x, y, z);
     
     // Áp dụng hiệu chuẩn
     mx = (float)x * mag_scale[0] + mag_offset[0];
@@ -96,7 +96,7 @@ void QMC5883L::readMag(float &mx, float &my, float &mz) {
     mz *= conversion;
     
     // In ra giá trị sau khi chuyển đổi
-    Serial.printf("Calibrated mag data (Gauss): X=%.3f Y=%.3f Z=%.3f\n", mx, my, mz);
+    //Serial.printf("Calibrated mag data (Gauss): X=%.3f Y=%.3f Z=%.3f\n", mx, my, mz);
 }
 
 float QMC5883L::getHeading() {
@@ -202,3 +202,10 @@ int16_t QMC5883L::readRawAxis(uint8_t lsbRegister, uint8_t msbRegister) {
     readRegisters(lsbRegister, buffer, 2);
     return (int16_t)((buffer[1] << 8) | buffer[0]);
 } 
+
+// Thêm vào QMC5883L.cpp
+bool QMC5883L::dataReady() {
+    uint8_t status;
+    if (!readRegisters(REG_STATUS, &status, 1)) return false;
+    return (status & 0x01) && !(status & 0x02); // DRDY=1, DOR=0
+}

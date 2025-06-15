@@ -11,6 +11,7 @@ public:
     void readMag(float &mx, float &my, float &mz);
     float getHeading();
     void calibrate();
+    bool dataReady();
     
 private:
     static const uint8_t QMC5883L_ADDR = 0x0D;  // Địa chỉ I2C mặc định
@@ -57,4 +58,4 @@ private:
     void setODR(uint8_t odr);
 };
 
-#endif 
+#endif
