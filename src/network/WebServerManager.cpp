@@ -1,9 +1,16 @@
 #include "network/WebServerManager.h"
+#include "debug/PlotterHTML.h"
 
-WebServerManager::WebServerManager(const char *ssid, const char *password, ESCController &escController, StatusLED &led, MPU6500 &mpu6500, BatteryMonitor &batteryMonitor,
-   CurrentMonitor &currentMonitor, BME280Sensor &bme)
-    : _ssid(ssid), _password(password), server(80), _esc(escController), _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor),
-     _current(currentMonitor), _bme280(bme) {}
+WebServerManager::WebServerManager(const char *ssid, const char *password, 
+                                 ESCController &escController, StatusLED &led, 
+                                 MPU6500 &mpu6500, BatteryMonitor &batteryMonitor,
+                                 CurrentMonitor &currentMonitor, BME280Sensor &bme,
+                                 SimpleMahony &mahony, DronePIDController &pidController,
+                                 IBusReceiver &receiver)
+    : _ssid(ssid), _password(password), server(80), _esc(escController), 
+      _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor),
+      _current(currentMonitor), _bme280(bme), _mahony(mahony), 
+      _pidController(pidController), _receiver(receiver) {}
 
 void WebServerManager::begin()
 {
@@ -333,6 +340,108 @@ void WebServerManager::setupRoutes()
       {
       float pressure = _bme280.readPressure();
       String json = "{\"bme280Pressure\":" + String(pressure, 2) + "}";
+      server.send(200, "application/json", json); });
+
+  // Thêm endpoint cho attitude data
+  server.on("/attitude", [this]()
+      {
+      String json = "{";
+      json += "\"roll\":" + String(_mahony.getRollDegrees(), 2) + ",";
+      json += "\"pitch\":" + String(_mahony.getPitchDegrees(), 2) + ",";
+      json += "\"yaw\":" + String(_mahony.getYawDegrees(), 2);
+      json += "}";
+      server.send(200, "application/json", json); });
+
+  // Thêm endpoint cho receiver data
+  server.on("/receiver", [this]()
+      {
+      String json = "{";
+      json += "\"throttle\":" + String(_receiver.get_throttle()) + ",";
+      json += "\"roll\":" + String(_receiver.get_roll()) + ",";
+      json += "\"pitch\":" + String(_receiver.get_pitch()) + ",";
+      json += "\"yaw\":" + String(_receiver.get_yaw()) + ",";
+      json += "\"aux1\":" + String(_receiver.get_aux1()) + ",";
+      json += "\"aux2\":" + String(_receiver.get_aux2());
+      json += "}";
+      server.send(200, "application/json", json); });
+
+  // Thêm endpoint cho PID data
+  server.on("/pid", [this]()
+      {
+      String json = "{";
+      json += "\"rollPID\":" + String(_pidController.getRollOutput(), 2) + ",";
+      json += "\"pitchPID\":" + String(_pidController.getPitchOutput(), 2) + ",";
+      json += "\"yawPID\":" + String(_pidController.getYawOutput(), 2) + ",";
+      json += "\"rollSetpoint\":0.0,";  // Cần thêm setpoint vào DronePIDController
+      json += "\"pitchSetpoint\":0.0,";
+      json += "\"yawSetpoint\":0.0";
+      json += "}";
+      server.send(200, "application/json", json); });
+
+  // Thêm endpoint cho motor data
+  server.on("/motors", [this]()
+      {
+      String json = "{";
+      json += "\"motor1\":" + String(_esc.getCurrentValue(ESC_FL)) + ",";
+      json += "\"motor2\":" + String(_esc.getCurrentValue(ESC_FR)) + ",";
+      json += "\"motor3\":" + String(_esc.getCurrentValue(ESC_RL)) + ",";
+      json += "\"motor4\":" + String(_esc.getCurrentValue(ESC_RR));
+      json += "}";
+      server.send(200, "application/json", json); });
+
+  // Thêm endpoint cho plotter
+  server.on("/plotter", [this]()
+      {
+      server.send(200, "text/html", PLOTTER_HTML); });
+
+  // Thêm endpoint cho tất cả dữ liệu debug
+  server.on("/debug", [this]()
+      {
+      SensorData sensorData = _mpu6500.getData();
+      String json = "{";
+      json += "\"timestamp\":" + String(millis()) + ",";
+      json += "\"sensor\":{";
+      json += "\"ax\":" + String(sensorData.ax, 2) + ",";
+      json += "\"ay\":" + String(sensorData.ay, 2) + ",";
+      json += "\"az\":" + String(sensorData.az, 2) + ",";
+      json += "\"gx\":" + String(sensorData.gx, 2) + ",";
+      json += "\"gy\":" + String(sensorData.gy, 2) + ",";
+      json += "\"gz\":" + String(sensorData.gz, 2) + ",";
+      json += "\"temp\":" + String(sensorData.temp, 2);
+      json += "},";
+      json += "\"attitude\":{";
+      json += "\"roll\":" + String(_mahony.getRollDegrees(), 2) + ",";
+      json += "\"pitch\":" + String(_mahony.getPitchDegrees(), 2) + ",";
+      json += "\"yaw\":" + String(_mahony.getYawDegrees(), 2);
+      json += "},";
+      json += "\"receiver\":{";
+      json += "\"throttle\":" + String(_receiver.get_throttle()) + ",";
+      json += "\"roll\":" + String(_receiver.get_roll()) + ",";
+      json += "\"pitch\":" + String(_receiver.get_pitch()) + ",";
+      json += "\"yaw\":" + String(_receiver.get_yaw()) + ",";
+      json += "\"aux1\":" + String(_receiver.get_aux1()) + ",";
+      json += "\"aux2\":" + String(_receiver.get_aux2());
+      json += "},";
+      json += "\"pid\":{";
+      json += "\"rollPID\":" + String(_pidController.getRollOutput(), 2) + ",";
+      json += "\"pitchPID\":" + String(_pidController.getPitchOutput(), 2) + ",";
+      json += "\"yawPID\":" + String(_pidController.getYawOutput(), 2) + ",";
+      json += "\"rollSetpoint\":0.0,";  // Cần thêm setpoint vào DronePIDController
+      json += "\"pitchSetpoint\":0.0,";
+      json += "\"yawSetpoint\":0.0";
+      json += "},";
+      json += "\"motors\":{";
+      json += "\"motor1\":" + String(_esc.getCurrentValue(ESC_FL)) + ",";
+      json += "\"motor2\":" + String(_esc.getCurrentValue(ESC_FR)) + ",";
+      json += "\"motor3\":" + String(_esc.getCurrentValue(ESC_RL)) + ",";
+      json += "\"motor4\":" + String(_esc.getCurrentValue(ESC_RR));
+      json += "},";
+      json += "\"system\":{";
+      json += "\"voltage\":" + String(_battery.getVoltage(), 2) + ",";
+      json += "\"current\":" + String(_current.getCurrent(), 2) + ",";
+      json += "\"pressure\":" + String(_bme280.readPressure(), 2);
+      json += "}";
+      json += "}";
       server.send(200, "application/json", json); });
   
 }

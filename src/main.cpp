@@ -12,6 +12,7 @@
 #include <controllers/DronePIDController.h>
 #include <receiver/IBusReceiver.h>
 #include <debug/SerialDebug.h>
+#include <debug/WebSocketDebug.h>
 
 // === Cấu hình ===
 #define STATUS_LED_PIN 2
@@ -61,7 +62,7 @@ DronePIDController pidController(
     100.0f,  // max output
     MAX_ANGLE  // max angle
 );
-WebServerManager webServer(ssid, password, escController, statusLed, mpu, battery, current, bme280);
+WebServerManager webServer(ssid, password, escController, statusLed, mpu, battery, current, bme280, mahony, pidController, receiver);
 
 // === Khai báo TaskHandle ===
 TaskHandle_t sensorTaskHandle;
@@ -69,6 +70,9 @@ TaskHandle_t webTaskHandle;
 
 // Thêm SerialDebug vào danh sách đối tượng
 SerialDebug serialDebug;
+
+// Thêm WebSocketDebug vào danh sách đối tượng
+WebSocketDebug webSocketDebug;
 
 // Hàm quét I2C
 void scanI2C() {
@@ -200,6 +204,23 @@ void sensorTask(void *parameter)
                 escController.getCurrentValue(ESC_RR)
             );
 
+            // Gửi dữ liệu qua WebSocket cho biểu đồ
+            webSocketDebug.sendDebugData(
+                rollActual, pitchActual, yawActual,
+                pidController.getRollOutput(),
+                pidController.getPitchOutput(),
+                pidController.getYawOutput(),
+                rollSetpoint, pitchSetpoint, yawSetpoint,
+                escController.getCurrentValue(ESC_FL),
+                escController.getCurrentValue(ESC_FR),
+                escController.getCurrentValue(ESC_RL),
+                escController.getCurrentValue(ESC_RR),
+                battery.getVoltage(),
+                current.getCurrent(),
+                ax, ay, az,
+                gx * RAD_TO_DEG, gy * RAD_TO_DEG, gz * RAD_TO_DEG
+            );
+
             // In debug info mỗi 1 giây
             if (millis() - lastPrint >= 1000) {
                 lastPrint = millis();
@@ -229,9 +250,11 @@ void sensorTask(void *parameter)
 void webTask(void *parameter)
 {
     webServer.begin();
+    webSocketDebug.begin();  // Khởi tạo WebSocket
     while (true)
     {
         webServer.handleClient();
+        webSocketDebug.handle();  // Xử lý WebSocket
         vTaskDelay(1);
     }
 }
