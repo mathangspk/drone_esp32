@@ -1,7 +1,7 @@
 #include "controllers/ESCControllers.h"
 
 // Cấu hình chân điều khiển ESC và kênh PWM
-const int ESCController::escPins[4] = {17, 27, 4, 26};
+const int ESCController::escPins[4] = {25, 27, 4, 14};
 const int ESCController::escChannels[4] = {0, 1, 2, 3};
 
 ESCController::ESCController()
