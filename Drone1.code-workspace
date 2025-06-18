@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "Drone1",
+			"path": "."
+		},
+		{
+			"name": "esp8266-car-race",
+			"path": "../esp8266-car-race"
+		},
+		{
+			"name": "nano-race-sbus",
+			"path": "../nano-race-sbus"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"bitset": "cpp"
+		}
+	}
+}
