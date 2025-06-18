@@ -4,6 +4,15 @@
 #include <Arduino.h>
 #include <math.h>
 
+// Conversion constants
+#ifndef RAD_TO_DEG
+#define RAD_TO_DEG (180.0f / PI)
+#endif
+
+#ifndef DEG_TO_RAD
+#define DEG_TO_RAD (PI / 180.0f)
+#endif
+
 class SimpleMahony {
 private:
     // Quaternion components

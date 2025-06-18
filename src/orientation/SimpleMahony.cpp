@@ -84,6 +84,14 @@ void SimpleMahony::update(float gx, float gy, float gz, float ax, float ay, floa
 
     // Normalise quaternion
     recipNorm = 1.0f / sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    
+    // Check for division by zero
+    if (isnan(recipNorm) || isinf(recipNorm) || recipNorm == 0.0f) {
+        // Reset quaternion if normalization fails
+        q0 = 1.0f; q1 = 0.0f; q2 = 0.0f; q3 = 0.0f;
+        return;
+    }
+    
     q0 *= recipNorm;
     q1 *= recipNorm;
     q2 *= recipNorm;
@@ -103,10 +111,15 @@ void SimpleMahony::update(float gx, float gy, float gz, float ax, float ay, floa
     float halfex, halfey, halfez;
     float qa, qb, qc;
 
-    // Convert gyroscope degrees/sec to radians/sec
-    gx *= 0.0174533f;
-    gy *= 0.0174533f;
-    gz *= 0.0174533f;
+    // Note: gx, gy, gz are already in radians/sec from main.cpp
+    // No need to convert again
+
+    // Check for invalid sensor data
+    if (isnan(gx) || isnan(gy) || isnan(gz) || 
+        isnan(ax) || isnan(ay) || isnan(az) ||
+        isnan(mx) || isnan(my) || isnan(mz)) {
+        return; // Skip update if any sensor data is invalid
+    }
 
     // Compute feedback only if accelerometer measurement valid
     if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
@@ -189,6 +202,14 @@ void SimpleMahony::update(float gx, float gy, float gz, float ax, float ay, floa
     
     // Normalise quaternion
     recipNorm = 1.0f / sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    
+    // Check for division by zero
+    if (isnan(recipNorm) || isinf(recipNorm) || recipNorm == 0.0f) {
+        // Reset quaternion if normalization fails
+        q0 = 1.0f; q1 = 0.0f; q2 = 0.0f; q3 = 0.0f;
+        return;
+    }
+    
     q0 *= recipNorm;
     q1 *= recipNorm;
     q2 *= recipNorm;
@@ -199,9 +220,20 @@ void SimpleMahony::update(float gx, float gy, float gz, float ax, float ay, floa
 }
 
 void SimpleMahony::computeAngles() {
+    // Check for valid quaternion before computing angles
+    if (isnan(q0) || isnan(q1) || isnan(q2) || isnan(q3)) {
+        roll = pitch = yaw = 0.0f;
+        return;
+    }
+    
     roll = atan2f(q0*q1 + q2*q3, 0.5f - q1*q1 - q2*q2);
     pitch = asinf(-2.0f * (q1*q3 - q0*q2));
     yaw = atan2f(q1*q2 + q0*q3, 0.5f - q2*q2 - q3*q3);
+    
+    // Check for invalid angles
+    if (isnan(roll) || isnan(pitch) || isnan(yaw)) {
+        roll = pitch = yaw = 0.0f;
+    }
 }
 
 void SimpleMahony::setGains(float proportional, float integral, float magnetic) {

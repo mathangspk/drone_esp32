@@ -1,5 +1,5 @@
-#ifndef BMP280_SENSOR_H
-#define BMP280_SENSOR_H
+#ifndef BME280_SENSOR_H
+#define BME280_SENSOR_H
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>

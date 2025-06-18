@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "IBusReceiver.h"
+#include "receiver/IBusReceiver.h"
 
 // Khởi tạo Serial2 cho IBus (ESP32 - GPIO16 RX2)
 HardwareSerial ibus_serial(2);

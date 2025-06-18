@@ -17,6 +17,14 @@ void MPU6500::begin()
     // Cấu hình accelerometer ±4g
     writeRegister(0x1C, 0x08); // 0000 1000b
 }
+
+bool MPU6500::isConnected()
+{
+    // Đọc WHO_AM_I register (0x75) - MPU6500 sẽ trả về 0x70
+    uint8_t whoAmI = readRegister(0x75);
+    return (whoAmI == 0x70);
+}
+
 SensorData MPU6500::getData()
 {
     uint8_t buffer[14];

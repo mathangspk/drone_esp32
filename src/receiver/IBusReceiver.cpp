@@ -1,4 +1,4 @@
-#include "IBusReceiver.h"
+#include "receiver/IBusReceiver.h"
 
 IBusReceiver::IBusReceiver(HardwareSerial* serial) : 
     ibus_serial(serial),

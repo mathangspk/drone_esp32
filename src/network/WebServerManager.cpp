@@ -3,13 +3,13 @@
 
 WebServerManager::WebServerManager(const char *ssid, const char *password, 
                                  ESCController &escController, StatusLED &led, 
-                                 MPU6500 &mpu6500, BatteryMonitor &batteryMonitor,
-                                 CurrentMonitor &currentMonitor, BME280Sensor &bme,
+                                 MPU6500 &mpu6500, BatteryMonitor &battery,
+                                 CurrentMonitor &current, BME280Sensor &bme,
                                  SimpleMahony &mahony, DronePIDController &pidController,
                                  IBusReceiver &receiver)
     : _ssid(ssid), _password(password), server(80), _esc(escController), 
-      _statusLED(led), _mpu6500(mpu6500), _battery(batteryMonitor),
-      _current(currentMonitor), _bme280(bme), _mahony(mahony), 
+      _statusLED(led), _mpu6500(mpu6500), _battery(battery),
+      _current(current), _bme280(bme), _mahony(mahony), 
       _pidController(pidController), _receiver(receiver) {}
 
 void WebServerManager::begin()

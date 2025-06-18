@@ -15,6 +15,7 @@ class MPU6500
 public:
     MPU6500(uint8_t csPin);
     void begin();
+    bool isConnected();
     void readSensor();
     SensorData getData();
     float getAccelX() const;

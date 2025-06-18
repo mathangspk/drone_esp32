@@ -8,7 +8,7 @@
 #include <devices/MPU6500.h>
 #include <devices/battery/BatteryMonitor.h>
 #include <devices/currentMeasure/CurrentMeasure.h>
-#include <BMP280/BMP280Sensor.h>
+#include <BME280/BME280Sensor.h>
 #include <orientation/SimpleMahony.h>
 #include <controllers/DronePIDController.h>
 #include <receiver/IBusReceiver.h>
