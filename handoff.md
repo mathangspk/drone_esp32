@@ -4,7 +4,7 @@
 
 ## Current State (2026-06-04)
 
-Codebase is clean and passing all 59 unit test assertions. The last two sessions completed a full audit and fixed every identified issue through P3. Ready for hardware flash and test flight.
+Codebase is clean and passing all 59 unit test assertions. Audit fixes (P0–P3) complete. RAM blackbox log extended with 7 new fields. Ready for hardware flash and test flight.
 
 ---
 
@@ -36,7 +36,7 @@ SoftAP `ESP32_Drone_Config` / `12345678` → `http://192.168.4.1/`. Active only 
 | `GET /api/receiver` | Live RC channel values |
 | `POST /api/receiver` | Virtual joystick override (disarmed only) |
 | `POST /api/motor` | Safe motor test (capped 1000–1150µs) |
-| `GET /api/log` | CSV export of RAM blackbox (500 entries @ 50Hz = 10s) |
+| `GET /api/log` | CSV export of RAM blackbox (500 entries @ 50Hz = 10s, 13 columns) |
 
 ### FreeRTOS Tasks
 | Task | Core | Priority | Role |
@@ -64,6 +64,29 @@ SoftAP `ESP32_Drone_Config` / `12345678` → `http://192.168.4.1/`. Active only 
 | P3 | PID defaults defined separately in `FlightController`, `FlightControllerPID`, and `WebDashboardHandlers` | Single source: `kDefaultRate/Yaw/AngleKp/Ki/Kd` as public constants in `FlightController.h` |
 | P3 | `3.14159f` in `MPU6500IMU.cpp` | Replaced with `kRadToDeg = 57.2957795f` constexpr |
 | P3 | `400.0f` PID clamp hardcoded 8 times | Named `kOutputLimit = 400.0f` in `PIDController.h` |
+
+---
+
+## RAM Blackbox Log
+
+Written at 50Hz (every 5 flight-loop iterations) while **ARMED**. Circular buffer, 500 entries ≈ 10 seconds. Exported as CSV via `GET /api/log` when disarmed. Buffer persists across arm/disarm cycles within a power session; cleared only on reboot.
+
+**CSV columns:**
+
+| Column | Unit | Description |
+|---|---|---|
+| `time_ms` | ms | `millis()` timestamp |
+| `roll_sp` | deg | Roll angle setpoint (from RC stick) |
+| `roll_act` | deg | Roll angle actual (Kalman output) |
+| `pitch_sp` | deg | Pitch angle setpoint (from RC stick) |
+| `pitch_act` | deg | Pitch angle actual (Kalman output) |
+| `yaw_sp` | deg/s | Yaw rate setpoint (from RC stick) |
+| `yaw_act` | deg/s | Yaw rate actual (calibrated gyro) |
+| `throttle` | µs | Throttle input after THROTTLE_MAX cap |
+| `m1`–`m4` | µs | Final motor outputs after saturation clamping |
+| `voltage` | V | Battery voltage (EMA-filtered, not raw ADC) |
+
+> Note: yaw is logged as **rate** (deg/s), not angle — the yaw axis has no outer angle loop, only inner rate PID.
 
 ---
 
