@@ -45,12 +45,16 @@ void FlightController::update(float dt) {
         return;
     }
 
-    bool isArmed = ppm_.getChannel(4) > 1500;
+    bool isArmed = ppm_.getChannel(ARM_CHANNEL) > ARM_THRESHOLD;
     if (!isArmed) {
         if (wasArmed_) { reset(); wasArmed_ = false; }
         return;
     }
-    if (!wasArmed_) { loadPIDGains(); wasArmed_ = true; }
+    if (!wasArmed_) {
+        if (ppm_.getChannel(THROTTLE_CHANNEL) >= THROTTLE_IDLE_LIMIT) return;
+        loadPIDGains();
+        wasArmed_ = true;
+    }
 
     float rateRoll, ratePitch, rateYaw, accRoll, accPitch;
     imu_.getGyroRates(rateRoll, ratePitch, rateYaw);
@@ -60,10 +64,10 @@ void FlightController::update(float dt) {
     rollKf_.update(rateRoll, accRoll, dt);
     pitchKf_.update(ratePitch, accPitch, dt);
 
-    float desiredAngleRoll  = 0.10f * (ppm_.getChannel(0) - 1500);
-    float desiredAnglePitch = 0.10f * (ppm_.getChannel(1) - 1500);
-    float inputThrottle     = ppm_.getChannel(2);
-    float desiredRateYaw    = 0.15f * (ppm_.getChannel(3) - 1500);
+    float desiredAngleRoll  = ROLL_SENSITIVITY  * (ppm_.getChannel(ROLL_CHANNEL)     - RC_CENTER);
+    float desiredAnglePitch = PITCH_SENSITIVITY * (ppm_.getChannel(PITCH_CHANNEL)    - RC_CENTER);
+    float inputThrottle     =  static_cast<float>(ppm_.getChannel(THROTTLE_CHANNEL));
+    float desiredRateYaw    = YAW_SENSITIVITY   * (ppm_.getChannel(YAW_CHANNEL)       - RC_CENTER);
 
     float desiredRateRoll  = rollAnglePid_.update(desiredAngleRoll - rollKf_.getState(), rollKf_.getState(), dt);
     float desiredRatePitch = pitchAnglePid_.update(desiredAnglePitch - pitchKf_.getState(), pitchKf_.getState(), dt);
@@ -72,20 +76,23 @@ void FlightController::update(float dt) {
     float inputPitch = pitchRatePid_.update(desiredRatePitch - ratePitch, ratePitch, dt);
     float inputYaw   = yawRatePid_.update(desiredRateYaw - rateYaw, rateYaw, dt);
 
-    if (inputThrottle > 1800.0f) inputThrottle = 1800.0f;
+    if (inputThrottle > THROTTLE_MAX) inputThrottle = THROTTLE_MAX;
     int m[4] = {
-        (int)(1.024f * (inputThrottle - inputRoll - inputPitch - inputYaw)),
-        (int)(1.024f * (inputThrottle - inputRoll + inputPitch + inputYaw)),
-        (int)(1.024f * (inputThrottle + inputRoll + inputPitch - inputYaw)),
-        (int)(1.024f * (inputThrottle + inputRoll - inputPitch + inputYaw))};
+        (int)(MIXING_SCALE * (inputThrottle - inputRoll - inputPitch - inputYaw)),
+        (int)(MIXING_SCALE * (inputThrottle - inputRoll + inputPitch + inputYaw)),
+        (int)(MIXING_SCALE * (inputThrottle + inputRoll + inputPitch - inputYaw)),
+        (int)(MIXING_SCALE * (inputThrottle + inputRoll - inputPitch + inputYaw))};
     // Rescale all motors together to preserve attitude authority at saturation
     int hi = m[0], lo = m[0];
     for (int i = 1; i < 4; ++i) { if (m[i] > hi) hi = m[i]; if (m[i] < lo) lo = m[i]; }
-    if (hi > 2000) { int d = hi - 2000; for (int i = 0; i < 4; ++i) m[i] -= d; }
-    if (lo < 1180) { int d = 1180 - lo; for (int i = 0; i < 4; ++i) m[i] += d; }
-    for (int i = 0; i < 4; ++i) { if (m[i] > 2000) m[i] = 2000; else if (m[i] < 1180) m[i] = 1180; }
+    if (hi > MOTOR_MAX_US)       { int d = hi - MOTOR_MAX_US;       for (int i = 0; i < 4; ++i) m[i] -= d; }
+    if (lo < MOTOR_MIN_ARMED_US) { int d = MOTOR_MIN_ARMED_US - lo; for (int i = 0; i < 4; ++i) m[i] += d; }
+    for (int i = 0; i < 4; ++i) {
+        if      (m[i] > MOTOR_MAX_US)       m[i] = MOTOR_MAX_US;
+        else if (m[i] < MOTOR_MIN_ARMED_US) m[i] = MOTOR_MIN_ARMED_US;
+    }
 
-    if (ppm_.getChannel(2) < 1050) {
+    if (ppm_.getChannel(THROTTLE_CHANNEL) < THROTTLE_IDLE_LIMIT) {
         m[0] = m[1] = m[2] = m[3] = 1000;
         reset();
     }

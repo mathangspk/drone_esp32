@@ -23,6 +23,27 @@ public:
     void loadPIDGains();
 
 private:
+    // RC channel indices
+    static constexpr int ROLL_CHANNEL     = 0;
+    static constexpr int PITCH_CHANNEL    = 1;
+    static constexpr int THROTTLE_CHANNEL = 2;
+    static constexpr int YAW_CHANNEL      = 3;
+    static constexpr int ARM_CHANNEL      = 4;
+
+    // RC thresholds and stick scaling
+    static constexpr int   RC_CENTER          = 1500; // center stick µs
+    static constexpr int   ARM_THRESHOLD      = 1500; // AUX1 above this = armed
+    static constexpr int   THROTTLE_IDLE_LIMIT = 1050; // below = idle, above = flying
+    static constexpr float THROTTLE_MAX       = 1800.0f; // cap before motor mixing
+    static constexpr float ROLL_SENSITIVITY   = 0.10f; // deg per µs from center
+    static constexpr float PITCH_SENSITIVITY  = 0.10f;
+    static constexpr float YAW_SENSITIVITY    = 0.15f; // deg/s per µs from center
+
+    // Motor output limits and mixing
+    static constexpr int   MOTOR_MAX_US       = 2000;
+    static constexpr int   MOTOR_MIN_ARMED_US = 1180; // keeps ESCs spinning while armed
+    static constexpr float MIXING_SCALE       = 1.024f;
+
     IIMU& imu_;
     IPPM& ppm_;
     IMotors& motors_;

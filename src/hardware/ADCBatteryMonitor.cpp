@@ -9,19 +9,18 @@ ADCBatteryMonitor::ADCBatteryMonitor(int analogPin, float refVoltage, float r1Va
 
 void ADCBatteryMonitor::init() {
 #ifndef NATIVE_BUILD
-    analogReadResolution(12);
+    analogReadResolution(ADC_RESOLUTION_BITS);
     pinMode(pin_, INPUT);
-    
+
     // Warm up the filter to establish a correct baseline immediately on boot
     float sumVoltage = 0.0f;
-    const int numSamples = 20;
-    for (int i = 0; i < numSamples; ++i) {
+    for (int i = 0; i < WARMUP_SAMPLES; ++i) {
         int rawValue = analogRead(pin_);
-        float voltage = (static_cast<float>(rawValue) / 4095.0f) * refVoltage_;
+        float voltage = (static_cast<float>(rawValue) / ADC_MAX_VALUE) * refVoltage_;
         sumVoltage += voltage * ((r1_ + r2_) / r2_);
         delay(5);
     }
-    currentVoltage_ = sumVoltage / static_cast<float>(numSamples);
+    currentVoltage_ = sumVoltage / static_cast<float>(WARMUP_SAMPLES);
 #endif
 }
 
@@ -29,17 +28,15 @@ float ADCBatteryMonitor::readVoltage() const {
     if (overrideActive_) return oVoltage_;
 #ifndef NATIVE_BUILD
     int rawValue = analogRead(pin_);
-    float voltage = (static_cast<float>(rawValue) / 4095.0f) * refVoltage_;
+    float voltage = (static_cast<float>(rawValue) / ADC_MAX_VALUE) * refVoltage_;
     float rawVoltage = voltage * ((r1_ + r2_) / r2_);
-    
-    // Exponential Moving Average filter (alpha = 0.05) to eliminate high frequency ADC noise
-    currentVoltage_ = 0.05f * rawVoltage + 0.95f * currentVoltage_;
+    currentVoltage_ = EMA_ALPHA * rawVoltage + (1.0f - EMA_ALPHA) * currentVoltage_;
 #endif
     return currentVoltage_;
 }
 
 bool ADCBatteryMonitor::isLow() const {
-    return readVoltage() < 9.0f;
+    return readVoltage() < LOW_VOLTAGE_THRESHOLD;
 }
 
 void ADCBatteryMonitor::setOverride(float voltage) {

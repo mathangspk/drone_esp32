@@ -9,6 +9,8 @@ class IBattery {
 public:
     virtual ~IBattery() = default;
 
+    static constexpr float LOW_VOLTAGE_THRESHOLD = 9.0f; // 3.0V/cell critical on 3S LiPo
+
     /**
      * @brief Reads the current battery voltage in Volts.
      */

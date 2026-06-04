@@ -40,7 +40,7 @@ void IBusReceiverDriver::readChannels() {
     if (oActive_) return;
     uint8_t val;
     unsigned long now = millis();
-    if (now - lastReadTime_ > 10) {
+    if (now - lastReadTime_ > FRAME_GAP_TIMEOUT_MS) {
         bufIndex_ = 0;
     }
 
@@ -60,8 +60,7 @@ void IBusReceiverDriver::readChannels() {
             }
         }
     }
-    // Timeout of 1000ms is signal loss
-    if (millis() - lastReadTime_ > 1000) {
+    if (millis() - lastReadTime_ > SIGNAL_LOSS_TIMEOUT_MS) {
         signalLost_ = true;
     }
 }

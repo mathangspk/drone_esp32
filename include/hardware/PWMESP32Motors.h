@@ -19,6 +19,15 @@ public:
     bool isMotorOverridden(int motorIdx) const override;
 
 private:
+    static constexpr int LEDC_FREQ_HZ  = 250;
+    static constexpr int LEDC_BITS     = 12;
+    static constexpr int PWM_PERIOD_US = 1000000 / LEDC_FREQ_HZ; // 4000
+    static constexpr int LEDC_MAX_DUTY = 1 << LEDC_BITS;          // 4096
+
+    static constexpr int usToDuty(int us) {
+        return (us * LEDC_MAX_DUTY) / PWM_PERIOD_US;
+    }
+
     int pins_[4];
     int outputs_[4] = {1000, 1000, 1000, 1000};
 

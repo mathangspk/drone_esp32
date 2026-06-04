@@ -23,6 +23,11 @@ public:
     bool isOverrideActive() const override { return oActive_; }
 
 private:
+    // i-BUS frames arrive every ~7ms; 100ms = ~14 missed frames before failsafe
+    static constexpr unsigned long SIGNAL_LOSS_TIMEOUT_MS = 100;
+    // reset frame buffer if gap between bytes exceeds this (mid-frame corruption)
+    static constexpr unsigned long FRAME_GAP_TIMEOUT_MS   = 10;
+
     HardwareSerial* serial_;
     uint8_t buffer_[32];
     uint8_t bufIndex_ = 0;

@@ -12,8 +12,7 @@ void PWMESP32Motors::init() {
 #ifndef NATIVE_BUILD
     for (int i = 0; i < 4; ++i) {
         pinMode(pins_[i], OUTPUT);
-        // channels 0, 1, 2, 3, 250Hz frequency, 12-bit resolution
-        ledcSetup(i, 250, 12);
+        ledcSetup(i, LEDC_FREQ_HZ, LEDC_BITS);
         ledcAttachPin(pins_[i], i);
     }
 #endif
@@ -25,7 +24,7 @@ void PWMESP32Motors::writeMotors(int m1, int m2, int m3, int m4) {
 #ifndef NATIVE_BUILD
     for (int i = 0; i < 4; ++i) {
         int speed = oActive_[i] ? oVal_[i] : outputs_[i];
-        ledcWrite(i, speed);
+        ledcWrite(i, usToDuty(speed));
     }
 #endif
 }

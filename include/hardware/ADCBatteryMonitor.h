@@ -20,6 +20,11 @@ public:
     bool isOverrideActive() const override { return overrideActive_; }
 
 private:
+    static constexpr int   ADC_RESOLUTION_BITS = 12;
+    static constexpr float ADC_MAX_VALUE       = (1 << ADC_RESOLUTION_BITS) - 1; // 4095
+    static constexpr float EMA_ALPHA           = 0.05f; // ~1Hz cutoff at 250Hz sample rate
+    static constexpr int   WARMUP_SAMPLES      = 20;
+
     int pin_;
     float refVoltage_;
     float r1_;

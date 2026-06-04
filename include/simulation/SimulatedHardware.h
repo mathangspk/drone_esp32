@@ -72,7 +72,7 @@ private:
 class SimulatedBatteryMonitor : public IBattery {
 public:
     float readVoltage() const override { return active_ ? oVoltage_ : 11.1f; }
-    bool isLow() const override { return readVoltage() < 9.0f; }
+    bool isLow() const override { return readVoltage() < LOW_VOLTAGE_THRESHOLD; }
     void setOverride(float v) override { oVoltage_ = v; }
     void setOverrideActive(bool active) override { active_ = active; }
     bool isOverrideActive() const override { return active_; }

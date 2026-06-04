@@ -35,11 +35,13 @@ void batteryMonitorTask(void *pvParameters) {
 }
 
 void flightControlTask(void *pvParameters) {
+    constexpr uint32_t kPeriodUs = 4000; // 250Hz
+    constexpr float    kDt       = kPeriodUs * 1e-6f;
     loopTimer = micros();
     while (1) {
-        fc.update(0.004f);
-        while ((micros() - loopTimer) < 4000);
-        loopTimer = micros();
+        fc.update(kDt);
+        while ((micros() - loopTimer) < kPeriodUs);
+        loopTimer += kPeriodUs;
     }
 }
 
