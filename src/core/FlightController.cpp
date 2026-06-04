@@ -38,9 +38,9 @@ void FlightController::reset() {
 void FlightController::update(float dt) {
     imu_.readSensor();
     ppm_.readChannels();
-    const float voltage = battery_.readVoltage();
+    battery_.readVoltage(); // Keep reading voltage for telemetry/LED alarms
 
-    if (voltage < 9.0f || ppm_.isSignalLost()) {
+    if (ppm_.isSignalLost()) {
         reset();
         return;
     }

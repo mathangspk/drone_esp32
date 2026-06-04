@@ -25,10 +25,12 @@ This document records the current progress, state, and next steps of the project
   - **Web Dashboard Controllers**: Implements PID tuning via ESP32 `Preferences` (NVS), safe motor testing (capped at 1150us), and formats CSV logs. Added **Joystick Overrides** to allow virtual joystick simulations over Wi-Fi when DISARMED.
   - **RAM Blackbox Logger**: Continuous 50Hz circular buffer logging of Roll/Pitch setpoints and actual values, throttle, and voltages, frozen on disarm for easy copy-pasting.
 - **Redraw Hardware Connection Diagram**: Updated [architecture.md](file:///c:/local/opencode/iot/esp32_drone/architecture.md) with a clear ASCII-art and tabular layout mapping ESP32 pinouts for MPU6500 (SPI), QMC5883L (I2C), Flysky i-BUS receiver (UART2), Voltage Monitor divider (GPIO 33), and LEDC ESC outputs (GPIO 25, 27, 4, 14).
-- **Algorithm Safety Fixes (4 bugs)**:
-  - **MPU6500 Init**: Added full device reset (`0x80→0x6B`), 100ms startup delays, and DLPF_CFG=3 (Gyro BW 41Hz) to filter motor vibration noise. Prevents wrong scale factor and gyro noise amplification.
+- **Algorithm & Driver Safety Fixes**:
+  - **MPU6500 Init**: Added full device reset (`0x80→0x6B`), 100ms startup delays, and DLPF_CFG=3 (Gyro BW 41Hz) to filter motor vibration noise.
   - **Angle PID D-term**: Changed default `DAngleRoll` and `DAnglePitch` from `0.6` to `0.0` to prevent derivative noise amplification on first flights. Tunable via Web Dashboard.
   - **Gyro Calibration**: Added `delayMicroseconds(1000)` between each sample to ensure 2000 genuinely independent IMU measurements instead of reading duplicate data.
+  - **Battery Voltage Filter**: Added an Exponential Moving Average (EMA) filter (alpha = 0.05) to eliminate high-frequency ADC noise, with a 20-sample warmup sequence during `init()` to establish a correct baseline immediately on boot.
+  - **Safe Battery Telemetry**: Removed the instantaneous low battery shutdown (`voltage < 9.0f`) from `FlightController::update` to prevent dangerous mid-air motor cutoff caused by transient voltage sag under heavy load (e.g. A2212 1400KV drawing ~50-60A total on 3S LiPo).
 
 ---
 
@@ -39,13 +41,14 @@ This document records the current progress, state, and next steps of the project
   - Drone Takeoff Weight: 800g (highly optimized).
   - Recommended Propellers: 8045 (8-inch) props for optimal motor load and cool operation.
   - Recommended Battery: 3S 2200mAh - 3300mAh LiPo battery (180g - 260g) for 8 to 11 minutes of flight.
+  - Telemetry Alarms: Telemetry/LED warning triggers at < 9.0V (3.0V/cell critical threshold) using a filtered and sag-resistant value.
 
 ---
 
 ## Verification & Testing
-- **Target Verification**: Verified by compiling the entire codebase via PlatformIO for target ESP32 Dev Module.
-  - **Outcome**: `[SUCCESS] Took 7.13 seconds`. Zero compilation warnings or errors.
-- **Native Unit Tests**: `pio test -e native` — `[PASSED] Took 1.60 seconds`.
+- **Target Verification**: Compiled the entire codebase via PlatformIO for target ESP32 Dev Module.
+  - **Outcome**: `[SUCCESS] Took 9.20 seconds`. Zero compilation warnings or errors.
+- **Native Unit Tests**: `pio test -e native` — `[PASSED] Took 4.05 seconds`.
 
 ---
 
@@ -62,3 +65,5 @@ This document records the current progress, state, and next steps of the project
    - Perform a short hover test (10-20 seconds).
    - Land and Disarm the drone.
    - Reconnect to the Wi-Fi AP, open the dashboard, click **Fetch CSV Log**, copy the text, and paste it to the AI chat to get optimized PID recommendations!
+4. **Tuning and Hardware Additions**:
+   - Consider connecting an active buzzer (5V) to the LED alarm pin (GPIO 2) or a dedicated pin to alert you audibly when battery drops below 9.0V, as the built-in LED is invisible during high-altitude flights.
