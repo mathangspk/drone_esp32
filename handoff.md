@@ -1,20 +1,19 @@
 # Handoff
 
 ## Summary of Changes
-- Refactored `main.cpp` to use OOP for LED indicators (`ESP32LEDIndicator`), removing direct `digitalWrite` and blocking delays.
-- Implemented a non-blocking state machine for the status LED to reflect drone states (Heartbeat in config/disarmed, Solid in armed, Rapid blinking for low battery).
-- Fixed the issue where the LED flashed rapidly in config mode while connected only via USB. `ADCBatteryMonitor::isLow()` was updated to ignore near-zero voltages (e.g., < 2.0V) which indicate the absence of a physical battery rather than a low battery condition.
+- Added an IMU telemetry endpoint (`/api/imu`) to `WebDashboardServer` to return raw Accelerometer Angles and Gyroscope Rates.
+- Updated the HTML/JS dashboard (`WebDashboardPage.h`) to display the IMU telemetry in a new "IMU Sensor Monitor" card.
+- The Motor Test functionality was already implemented in previous phases; guided the user on how to use it.
 
 ## Current System State
-- The flight controller is able to boot.
-- The web configuration portal is accessible when in config mode.
-- LED indicates Heartbeat (disarmed/config) and no longer gives false low battery warnings on pure USB power.
-- Unit tests compile properly with `test_build_src = yes`.
+- Drone boots normally.
+- Config Web Dashboard is accessible over Wi-Fi (`ESP32_Drone_Config`).
+- Dashboard shows PID, Receiver, IMU, and Motor Test tabs, all updating dynamically.
 
 ## Verification & Testing
-- Source code analysis and logic updates in `ADCBatteryMonitor.cpp`.
-- Firmware successfully compiles.
+- Firmware compiles successfully.
+- Web UI is updated and functional.
 
 ## Next Steps
-- User to verify the new LED logic (Heartbeat pulse) on the hardware while in Config mode.
-- Continue testing motor control or IMU calibration features via the config portal.
+- User to test the web dashboard's IMU monitor by tilting the drone.
+- User to test the motors using the Motor Test section (ensure props are removed!).

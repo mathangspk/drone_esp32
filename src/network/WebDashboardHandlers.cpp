@@ -103,3 +103,23 @@ void WebDashboardHandlers::handleMotorTest(WebServer& server) {
     }
     server.send(200, "application/json", "{\"ok\":true}");
 }
+
+void WebDashboardHandlers::handleGetIMU(WebServer& server) {
+    if (!imu_) { server.send(500, "text/plain", "Not initialized"); return; }
+    
+    // We only poll the IMU if we want fresh data, but typically the flight controller loop
+    // already polls it. If the flight task isn't running (e.g. config mode only), we might
+    // need to read it. To be safe and show live data, we call readSensor().
+    imu_->readSensor();
+    
+    float aRoll = 0, aPitch = 0;
+    float gRoll = 0, gPitch = 0, gYaw = 0;
+    
+    imu_->getAccAngles(aRoll, aPitch);
+    imu_->getGyroRates(gRoll, gPitch, gYaw);
+    
+    char buf[128];
+    snprintf(buf, sizeof(buf), "{\"a_r\":%.1f,\"a_p\":%.1f,\"g_r\":%.1f,\"g_p\":%.1f,\"g_y\":%.1f}",
+             aRoll, aPitch, gRoll, gPitch, gYaw);
+    server.send(200, "application/json", buf);
+}

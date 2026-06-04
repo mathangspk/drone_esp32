@@ -11,6 +11,7 @@ void WebDashboardServer::registerRoutes() {
     server_.on("/api/receiver", HTTP_GET, [this]() { WebDashboardHandlers::handleGetReceiver(this->server_); });
     server_.on("/api/receiver", HTTP_POST, [this]() { WebDashboardHandlers::handleSetReceiver(this->server_); });
     server_.on("/api/motor", HTTP_POST, [this]() { WebDashboardHandlers::handleMotorTest(this->server_); });
+    server_.on("/api/imu", HTTP_GET, [this]() { WebDashboardHandlers::handleGetIMU(this->server_); });
     server_.on("/api/log", HTTP_GET, [this]() { WebDashboardHandlers::handleGetLog(this->server_); });
     routesRegistered_ = true;
 }

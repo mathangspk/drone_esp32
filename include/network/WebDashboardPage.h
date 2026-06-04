@@ -39,6 +39,14 @@ textarea { width: 100%; height: 150px; background: #222; color: #00ff00; border:
   <div class="row">AUX1: <span id="val4">1000</span> <div class="bar"><div id="bar4" class="fill"></div></div></div>
 </div>
 <div class="card">
+  <h2>IMU Sensor Monitor</h2>
+  <div class="row" style="display:inline-block; width:150px;">Acc Roll: <span id="imu_ar">0</span>&deg;</div>
+  <div class="row" style="display:inline-block; width:150px;">Acc Pitch: <span id="imu_ap">0</span>&deg;</div>
+  <div class="row" style="display:inline-block; width:150px;">Gyro Roll: <span id="imu_gr">0</span>&deg;/s</div>
+  <div class="row" style="display:inline-block; width:150px;">Gyro Pitch: <span id="imu_gp">0</span>&deg;/s</div>
+  <div class="row" style="display:inline-block; width:150px;">Gyro Yaw: <span id="imu_gy">0</span>&deg;/s</div>
+</div>
+<div class="card">
   <h2>Joystick Override (Simulation)</h2>
   <label><input type="checkbox" id="rxTest" onchange="toggleRxTest()"> Enable Joystick Override</label>
   <div class="row" style="margin-top:10px;">
@@ -84,6 +92,15 @@ function updateRX(){
     }
   });
 }
+function updateIMU(){
+  get('/api/imu', d=>{
+    let mapping = {ar: 'a_r', ap: 'a_p', gr: 'g_r', gp: 'g_p', gy: 'g_y'};
+    for(let k in mapping) {
+      let el = document.getElementById('imu_'+k);
+      if(el) el.innerText = d[mapping[k]];
+    }
+  });
+}
 function toggleRxTest(){
   let act = document.getElementById('rxTest').checked;
   post('/api/receiver', {active: act, channelIdx: -1, value: 1500}, r=>{});
@@ -105,7 +122,7 @@ function copyLog(){
   let b=document.getElementById('logBox'); b.select(); document.execCommand('copy');
   alert('Copied raw CSV to clipboard!');
 }
-window.onload=()=>{ loadPID(); setInterval(updateRX, 250); };
+window.onload=()=>{ loadPID(); setInterval(updateRX, 250); setInterval(updateIMU, 250); };
 </script></body></html>)rawhtml";
 
 #endif // WEBDASHBOARDPAGE_H

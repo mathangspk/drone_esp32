@@ -45,6 +45,7 @@ public:
     static void handleGetReceiver(WebServer& server);
     static void handleSetReceiver(WebServer& server);
     static void handleMotorTest(WebServer& server);
+    static void handleGetIMU(WebServer& server);
     static void handleGetLog(WebServer& server);
 
     static void logFlightData(float rSp, float rAct, float pSp, float pAct,
