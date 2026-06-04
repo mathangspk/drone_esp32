@@ -23,7 +23,7 @@ uint32_t loopTimer = 0;
 void batteryMonitorTask(void *pvParameters) {
     pinMode(2, OUTPUT);
     while (1) {
-        float voltage = physicalBattery.readVoltage();
+        physicalBattery.update(); // sole writer of currentVoltage_ — Core 0 only
         if (physicalBattery.isLow()) {
             digitalWrite(2, HIGH); delay(500);
             digitalWrite(2, LOW); delay(500);

@@ -20,19 +20,24 @@ void ADCBatteryMonitor::init() {
         sumVoltage += voltage * ((r1_ + r2_) / r2_);
         delay(5);
     }
-    currentVoltage_ = sumVoltage / static_cast<float>(WARMUP_SAMPLES);
+    currentVoltage_.store(sumVoltage / static_cast<float>(WARMUP_SAMPLES), std::memory_order_relaxed);
+#endif
+}
+
+void ADCBatteryMonitor::update() {
+    if (overrideActive_) return;
+#ifndef NATIVE_BUILD
+    int rawValue = analogRead(pin_);
+    float voltage = (static_cast<float>(rawValue) / ADC_MAX_VALUE) * refVoltage_;
+    float rawVoltage = voltage * ((r1_ + r2_) / r2_);
+    float prev = currentVoltage_.load(std::memory_order_relaxed);
+    currentVoltage_.store(EMA_ALPHA * rawVoltage + (1.0f - EMA_ALPHA) * prev, std::memory_order_relaxed);
 #endif
 }
 
 float ADCBatteryMonitor::readVoltage() const {
     if (overrideActive_) return oVoltage_;
-#ifndef NATIVE_BUILD
-    int rawValue = analogRead(pin_);
-    float voltage = (static_cast<float>(rawValue) / ADC_MAX_VALUE) * refVoltage_;
-    float rawVoltage = voltage * ((r1_ + r2_) / r2_);
-    currentVoltage_ = EMA_ALPHA * rawVoltage + (1.0f - EMA_ALPHA) * currentVoltage_;
-#endif
-    return currentVoltage_;
+    return currentVoltage_.load(std::memory_order_relaxed);
 }
 
 bool ADCBatteryMonitor::isLow() const {

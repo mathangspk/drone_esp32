@@ -38,7 +38,6 @@ void FlightController::reset() {
 void FlightController::update(float dt) {
     imu_.readSensor();
     ppm_.readChannels();
-    battery_.readVoltage(); // Keep reading voltage for telemetry/LED alarms
 
     if (ppm_.isSignalLost()) {
         reset();

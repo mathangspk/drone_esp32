@@ -2,6 +2,7 @@
 #define ADCBATTERYMONITOR_H
 
 #include "interfaces/IBattery.h"
+#include <atomic>
 
 /**
  * @brief ESP32 analog ADC battery voltage monitor driver using a voltage divider.
@@ -11,7 +12,8 @@ public:
     ADCBatteryMonitor(int analogPin, float refVoltage, float r1Value, float r2Value);
 
     void init();
-    float readVoltage() const override;
+    void update();          // reads ADC and advances EMA — call from one task only
+    float readVoltage() const override; // pure getter, safe to call from any task
     bool isLow() const override;
 
     // Simulation/Override functionality
@@ -29,7 +31,7 @@ private:
     float refVoltage_;
     float r1_;
     float r2_;
-    mutable float currentVoltage_ = 11.1f;
+    std::atomic<float> currentVoltage_{11.1f};
 
     // Override states
     bool overrideActive_ = false;
