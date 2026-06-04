@@ -1,0 +1,10 @@
+{
+  "name": "drone_core",
+  "version": "1.0.0",
+  "description": "Platform-independent flight controller core algorithms",
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcFilter": "+<*.cpp>"
+  }
+}

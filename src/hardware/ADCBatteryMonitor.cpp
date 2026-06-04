@@ -1,0 +1,33 @@
+#include "hardware/ADCBatteryMonitor.h"
+
+#ifndef NATIVE_BUILD
+#include <Arduino.h>
+#endif
+
+ADCBatteryMonitor::ADCBatteryMonitor(int analogPin, float refVoltage, float r1Value, float r2Value)
+    : pin_(analogPin), refVoltage_(refVoltage), r1_(r1Value), r2_(r2Value) {}
+
+void ADCBatteryMonitor::init() {
+#ifndef NATIVE_BUILD
+    analogReadResolution(12);
+    pinMode(pin_, INPUT);
+#endif
+}
+
+float ADCBatteryMonitor::readVoltage() const {
+    if (overrideActive_) return oVoltage_;
+#ifndef NATIVE_BUILD
+    int rawValue = analogRead(pin_);
+    float voltage = (static_cast<float>(rawValue) / 4095.0f) * refVoltage_;
+    currentVoltage_ = voltage * ((r1_ + r2_) / r2_);
+#endif
+    return currentVoltage_;
+}
+
+bool ADCBatteryMonitor::isLow() const {
+    return readVoltage() < 9.0f;
+}
+
+void ADCBatteryMonitor::setOverride(float voltage) {
+    oVoltage_ = voltage;
+}
