@@ -22,6 +22,16 @@ public:
     // Load dynamic PID values from NVS memory
     void loadPIDGains();
 
+    // Default PID gains — single source of truth for firmware and web dashboard
+    static constexpr float kDefaultRateKp  = 0.7f;
+    static constexpr float kDefaultRateKi  = 0.0f;
+    static constexpr float kDefaultRateKd  = 0.01f;
+    static constexpr float kDefaultYawKp   = 2.0f;
+    static constexpr float kDefaultYawKi   = 12.0f;
+    static constexpr float kDefaultYawKd   = 0.0f;
+    static constexpr float kDefaultAngleKp = 1.5f;
+    static constexpr float kDefaultAngleKd = 0.0f; // D=0 on first flights to avoid noise
+
 private:
     // RC channel indices
     static constexpr int ROLL_CHANNEL     = 0;
@@ -54,13 +64,13 @@ private:
     KalmanFilter pitchKf_;
 
     // Inner Rate PIDs — dAlpha=0.5 ≈ 40Hz LPF on D-term at 250Hz loop rate
-    PIDController rollRatePid_{0.7f, 0.0f, 0.01f, 0.5f};
-    PIDController pitchRatePid_{0.7f, 0.0f, 0.01f, 0.5f};
-    PIDController yawRatePid_{2.0f, 12.0f, 0.0f};
+    PIDController rollRatePid_{kDefaultRateKp,  kDefaultRateKi,  kDefaultRateKd,  0.5f};
+    PIDController pitchRatePid_{kDefaultRateKp, kDefaultRateKi,  kDefaultRateKd,  0.5f};
+    PIDController yawRatePid_{kDefaultYawKp,    kDefaultYawKi,   kDefaultYawKd};
 
     // Outer Angle PIDs — D-term starts at 0 to avoid noise amplification on first flights
-    PIDController rollAnglePid_{1.5f, 0.0f, 0.0f, 0.5f};
-    PIDController pitchAnglePid_{1.5f, 0.0f, 0.0f, 0.5f};
+    PIDController rollAnglePid_{kDefaultAngleKp,  0.0f, kDefaultAngleKd, 0.5f};
+    PIDController pitchAnglePid_{kDefaultAngleKp, 0.0f, kDefaultAngleKd, 0.5f};
 
     // Calibration Offsets
     float calRollRate_ = 0.0f;

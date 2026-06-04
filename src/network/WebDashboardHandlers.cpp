@@ -1,5 +1,6 @@
 #include "network/WebDashboardHandlers.h"
 #include "network/WebDashboardPage.h"
+#include "core/FlightController.h"
 #ifndef NATIVE_BUILD
 #include <Preferences.h>
 #endif
@@ -22,7 +23,11 @@ void WebDashboardHandlers::handleRoot(WebServer& server) {
 }
 
 void WebDashboardHandlers::handleGetPID(WebServer& server) {
-    float r_kp=0.7f, r_ki=0.0f, r_kd=0.01f, p_kp=0.7f, p_ki=0.0f, p_kd=0.01f, y_kp=2.0f, y_ki=12.0f, y_kd=0.0f, ra_kp=1.5f, ra_kd=0.6f, pa_kp=1.5f, pa_kd=0.6f;
+    float r_kp=FlightController::kDefaultRateKp,  r_ki=FlightController::kDefaultRateKi,  r_kd=FlightController::kDefaultRateKd;
+    float p_kp=FlightController::kDefaultRateKp,  p_ki=FlightController::kDefaultRateKi,  p_kd=FlightController::kDefaultRateKd;
+    float y_kp=FlightController::kDefaultYawKp,   y_ki=FlightController::kDefaultYawKi,   y_kd=FlightController::kDefaultYawKd;
+    float ra_kp=FlightController::kDefaultAngleKp, ra_kd=FlightController::kDefaultAngleKd;
+    float pa_kp=FlightController::kDefaultAngleKp, pa_kd=FlightController::kDefaultAngleKd;
 #ifndef NATIVE_BUILD
     Preferences prefs;
     prefs.begin("pid", true);

@@ -5,9 +5,11 @@
 #endif
 
 void FlightController::loadPIDGains() {
-    float r_kp=0.7f, r_ki=0.0f, r_kd=0.01f, p_kp=0.7f, p_ki=0.0f, p_kd=0.01f;
-    float y_kp=2.0f, y_ki=12.0f, y_kd=0.0f;
-    float ra_kp=1.5f, ra_kd=0.0f, pa_kp=1.5f, pa_kd=0.0f;
+    float r_kp=kDefaultRateKp,  r_ki=kDefaultRateKi,  r_kd=kDefaultRateKd;
+    float p_kp=kDefaultRateKp,  p_ki=kDefaultRateKi,  p_kd=kDefaultRateKd;
+    float y_kp=kDefaultYawKp,   y_ki=kDefaultYawKi,   y_kd=kDefaultYawKd;
+    float ra_kp=kDefaultAngleKp, ra_kd=kDefaultAngleKd;
+    float pa_kp=kDefaultAngleKp, pa_kd=kDefaultAngleKd;
 
 #ifndef NATIVE_BUILD
     Preferences prefs;
