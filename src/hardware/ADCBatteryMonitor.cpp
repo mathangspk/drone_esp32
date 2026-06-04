@@ -41,7 +41,10 @@ float ADCBatteryMonitor::readVoltage() const {
 }
 
 bool ADCBatteryMonitor::isLow() const {
-    return readVoltage() < LOW_VOLTAGE_THRESHOLD;
+    float v = readVoltage();
+    // If voltage is extremely low (e.g., < 2.0V), it means no battery is connected 
+    // (e.g., running from USB power only). Do not trigger low battery warning.
+    return (v > 2.0f && v < LOW_VOLTAGE_THRESHOLD);
 }
 
 void ADCBatteryMonitor::setOverride(float voltage) {
