@@ -24,9 +24,12 @@ public:
 
 struct FlightLogEntry {
     uint32_t timeMs;
-    float rollSp, rollAct;
+    float rollSp,  rollAct;
     float pitchSp, pitchAct;
+    float yawSp,   yawAct;
     int16_t throttle;
+    int16_t m1, m2, m3, m4;
+    float voltage;
 };
 
 /**
@@ -44,7 +47,10 @@ public:
     static void handleMotorTest(WebServer& server);
     static void handleGetLog(WebServer& server);
 
-    static void logFlightData(float rSp, float rAct, float pSp, float pAct, int16_t throttle);
+    static void logFlightData(float rSp, float rAct, float pSp, float pAct,
+                              float ySp, float yAct, int16_t throttle,
+                              int16_t m1, int16_t m2, int16_t m3, int16_t m4,
+                              float voltage);
     static void clearFlightLog();
 
 private:

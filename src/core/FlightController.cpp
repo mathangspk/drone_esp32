@@ -100,9 +100,14 @@ void FlightController::update(float dt) {
 
 #ifndef NATIVE_BUILD
     if (++logDiv_ >= 5) {
-        WebDashboardHandlers::logFlightData(desiredAngleRoll, rollKf_.getState(),
-                                           desiredAnglePitch, pitchKf_.getState(),
-                                           static_cast<int16_t>(inputThrottle));
+        WebDashboardHandlers::logFlightData(
+            desiredAngleRoll,  rollKf_.getState(),
+            desiredAnglePitch, pitchKf_.getState(),
+            desiredRateYaw,    rateYaw,
+            static_cast<int16_t>(inputThrottle),
+            static_cast<int16_t>(m[0]), static_cast<int16_t>(m[1]),
+            static_cast<int16_t>(m[2]), static_cast<int16_t>(m[3]),
+            battery_.readVoltage());
         logDiv_ = 0;
     }
 #endif
