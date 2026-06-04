@@ -24,12 +24,22 @@ void batteryMonitorTask(void *pvParameters) {
     pinMode(2, OUTPUT);
     while (1) {
         physicalBattery.update(); // sole writer of currentVoltage_ — Core 0 only
-        if (physicalBattery.isLow()) {
-            digitalWrite(2, HIGH); delay(500);
-            digitalWrite(2, LOW); delay(500);
-        } else {
+        
+        bool isLow = physicalBattery.isLow();
+        bool isArmed = physicalPpm.getChannel(FlightController::ARM_CHANNEL) > FlightController::ARM_THRESHOLD && !physicalPpm.isSignalLost();
+        
+        if (isLow) {
+            // Low battery: rapid warning blink (100ms ON, 100ms OFF)
+            digitalWrite(2, HIGH); delay(100);
+            digitalWrite(2, LOW);  delay(100);
+        } else if (isArmed) {
+            // Armed/Fly state: Solid ON
             digitalWrite(2, HIGH);
-            delay(1000);
+            delay(100);
+        } else {
+            // Disarmed/Config state: Slow heartbeat pulse (50ms ON, 950ms OFF)
+            digitalWrite(2, HIGH); delay(50);
+            digitalWrite(2, LOW);  delay(950);
         }
     }
 }

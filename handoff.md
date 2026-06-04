@@ -4,7 +4,7 @@
 
 ## Current State (2026-06-04)
 
-Codebase is clean and passing all 59 unit test assertions. Audit fixes (P0–P3) complete. RAM blackbox log extended with 7 new fields. Ready for hardware flash and test flight.
+Codebase is clean, compiling successfully, and passing all 59 unit test assertions in native test environments. Audit fixes (P0–P3) complete. Added state-aware LED blinking patterns (heartbeat disarmed/config pulse, solid armed, rapid low-battery flash) and resolved PlatformIO native test suite linkage. Ready for hardware flash and test flight.
 
 ---
 
