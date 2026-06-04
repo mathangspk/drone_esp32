@@ -15,7 +15,17 @@
       "Bash(git commit *)",
       "Bash(git config *)",
       "Bash(git push *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(g++ --version)",
+      "Bash(g++ -std=c++17 -DNATIVE_BUILD -I include -I .pio/libdeps/native/doctest src/core/FlightController.cpp src/core/FlightControllerPID.cpp src/core/KalmanFilter.cpp src/core/PIDController.cpp tests/test_main.cpp tests/test_tdd/test_pid.cpp tests/test_tdd/test_kalman.cpp tests/test_tdd/test_flight_controller.cpp tests/test_tdd/test_simulation.cpp -o /tmp/test_drone)",
+      "Bash(g++ -std=c++17 -DNATIVE_BUILD -I include -I .pio/libdeps/native/doctest -I .pio/libdeps/native/doctest/doctest src/core/FlightController.cpp src/core/FlightControllerPID.cpp src/core/KalmanFilter.cpp src/core/PIDController.cpp tests/test_main.cpp tests/test_tdd/test_pid.cpp tests/test_tdd/test_kalman.cpp tests/test_tdd/test_flight_controller.cpp tests/test_tdd/test_simulation.cpp -o /tmp/test_drone)",
+      "Bash(/tmp/test_drone *)",
+      "Bash(~/.platformio/penv/bin/pio test *)",
+      "Bash(python3 -c \"import platformio\")",
+      "Bash(g++ *)",
+      "Bash(/tmp/drone_tests *)",
+      "Bash(git rm *)",
+      "Bash(/mnt/c/Users/technician/AppData/Local/Programs/Python/Python312/Scripts/pio.exe device *)"
     ]
   }
 }

@@ -63,7 +63,8 @@ SoftAP `ESP32_Drone_Config` / `12345678` → `http://192.168.4.1/`. Active only 
 | P3 | Magic numbers throughout `FlightController.cpp` (15 raw constants) | All moved to named `static constexpr` in `FlightController.h` |
 | P3 | PID defaults defined separately in `FlightController`, `FlightControllerPID`, and `WebDashboardHandlers` | Single source: `kDefaultRate/Yaw/AngleKp/Ki/Kd` as public constants in `FlightController.h` |
 | P3 | `3.14159f` in `MPU6500IMU.cpp` | Replaced with `kRadToDeg = 57.2957795f` constexpr |
-| P3 | `400.0f` PID clamp hardcoded 8 times | Named `kOutputLimit = 400.0f` in `PIDController.h` |
+| P3 | 400.0f PID clamp hardcoded 8 times | Named kOutputLimit = 400.0f in PIDController.h |
+| P0 | Native tests failed to link core files after they were moved from lib/drone_core to src/core | Added `test_build_src = yes` to native env in `platformio.ini` to enable compilation of project sources during test runs |
 
 ---
 
