@@ -1,69 +1,109 @@
-# Project Handoff - ESP32 Flight Controller C++ OOP Rewrite
-
-This document records the current progress, state, and next steps of the project.
+# Project Handoff — ESP32 Flight Controller
 
 ---
 
-## Summary of Changes
-- **Project Structure**: Setup PlatformIO project with double environment support: `esp32dev` (target hardware) and `native` (host testing).
-- **C++ Coding Standard (`agent.md`)**: Configured strict modern C++17 rules, standard OOP naming conventions, a **strict limit of 100 lines per file**, and doctest TDD workflow. Fixed Vietnamese comments to satisfy the English-only guideline.
-- **System Architecture (`architecture.md`)**: Visualized class relationships, abstract interfaces, and targets.
-- **Hardware Abstraction Layer (HAL)**: Created clean, platform-independent virtual interfaces (`IIMU`, `IPPM`, `IMotors`, `IBattery`).
-- **Core Algorithms**:
-  - `PIDController`: Dynamic gain tuning support, proportional, trapezoidal integral with anti-windup clamping, and derivative outputs.
-  - `KalmanFilter`: 1D Kalman equations to fuse gyroscope rates and accelerometer angles.
-  - `FlightController`: Supports safety arm switch (AUX1), dynamic PID loading, and RAM Blackbox logging.
-- **Physical Drivers (ESP32)**:
-  - `MPU6500IMU`: SPI IMU reader (SCK=18, MISO=19, MOSI=23, CS=5). Runs at high-speed SPI.
-  - `IBusReceiverDriver`: Digital serial i-BUS receiver (UART2 on pin 16). Handles channel parsing and timeout failsafe.
-  - `QMC5883LCompass`: Auxiliary I2C compass sensor (address 0x0D) to measure heading.
-  - `PWMESP32Motors`: LEDC hardware PWM speed writer (250Hz frequency) mapping to **M1=25, M2=27, M3=4, M4=14** to avoid conflicts.
-  - `ADCBatteryMonitor`: Voltage divider analog pin reader mapping to **pin 33**.
-- **Web Config Dashboard & Telemetry Logs**:
-  - `WebDashboardPage`: Static HTML dashboard page with sliders and fields.
-  - `WebDashboardServer`: SoftAP (`ESP32_Drone_Config`) server that activates *only* in the DISARMED state, and powers down the Wi-Fi stack completely during flight (ARMED state) to avoid CPU interrupts.
-  - **Web Dashboard Controllers**: Implements PID tuning via ESP32 `Preferences` (NVS), safe motor testing (capped at 1150us), and formats CSV logs. Added **Joystick Overrides** to allow virtual joystick simulations over Wi-Fi when DISARMED.
-  - **RAM Blackbox Logger**: Continuous 50Hz circular buffer logging of Roll/Pitch setpoints and actual values, throttle, and voltages, frozen on disarm for easy copy-pasting.
-- **Redraw Hardware Connection Diagram**: Updated [architecture.md](file:///c:/local/opencode/iot/esp32_drone/architecture.md) with a clear ASCII-art and tabular layout mapping ESP32 pinouts for MPU6500 (SPI), QMC5883L (I2C), Flysky i-BUS receiver (UART2), Voltage Monitor divider (GPIO 33), and LEDC ESC outputs (GPIO 25, 27, 4, 14).
-- **Algorithm & Driver Safety Fixes**:
-  - **MPU6500 Init**: Added full device reset (`0x80→0x6B`), 100ms startup delays, and DLPF_CFG=3 (Gyro BW 41Hz) to filter motor vibration noise.
-  - **Angle PID D-term**: Changed default `DAngleRoll` and `DAnglePitch` from `0.6` to `0.0` to prevent derivative noise amplification on first flights. Tunable via Web Dashboard.
-  - **Gyro Calibration**: Added `delayMicroseconds(1000)` between each sample to ensure 2000 genuinely independent IMU measurements instead of reading duplicate data.
-  - **Battery Voltage Filter**: Added an Exponential Moving Average (EMA) filter (alpha = 0.05) to eliminate high-frequency ADC noise, with a 20-sample warmup sequence during `init()` to establish a correct baseline immediately on boot.
-  - **Safe Battery Telemetry**: Removed the instantaneous low battery shutdown (`voltage < 9.0f`) from `FlightController::update` to prevent dangerous mid-air motor cutoff caused by transient voltage sag under heavy load (e.g. A2212 1400KV drawing ~50-60A total on 3S LiPo).
+## Current State (2026-06-04)
+
+Codebase is clean and passing all 59 unit test assertions. The last two sessions completed a full audit and fixed every identified issue through P3. Ready for hardware flash and test flight.
 
 ---
 
-## Current System State
-- **Compiling State**: The entire codebase compiles successfully for the `esp32dev` target! Flash usage is 63.6%, RAM usage is 17.8%.
-- **Testing**: All unit tests build and pass cleanly on the native compiler environment.
-- **Optimal Hardware Configuration**:
-  - Drone Takeoff Weight: 800g (highly optimized).
-  - Recommended Propellers: 8045 (8-inch) props for optimal motor load and cool operation.
-  - Recommended Battery: 3S 2200mAh - 3300mAh LiPo battery (180g - 260g) for 8 to 11 minutes of flight.
-  - Telemetry Alarms: Telemetry/LED warning triggers at < 9.0V (3.0V/cell critical threshold) using a filtered and sag-resistant value.
+## What Was Built
+
+### Hardware Abstraction Layer
+Clean virtual interfaces in `include/interfaces/`: `IIMU`, `IPPM`, `IMotors`, `IBattery`. All ESP32 drivers implement these so the flight algorithm is platform-independent and fully testable on host.
+
+### Core Algorithms (`src/core/`)
+- **PIDController** — trapezoidal integral with anti-windup (±400µs), D-on-measurement with optional LPF (`dAlpha`). Output limit named `kOutputLimit`.
+- **KalmanFilter** — 1D gyro + accelerometer fusion. Process noise σ=4 deg/s, measurement noise σ=3 deg.
+- **FlightController** — cascaded angle→rate PID, Kalman-fused attitude, motor mixing with collective saturation clamping. Splits into `FlightController.cpp` + `FlightControllerPID.cpp` to stay under 100-line limit.
+
+### ESP32 Drivers (`src/hardware/`)
+- **MPU6500IMU** — SPI at 8MHz, full device reset on `begin()`, DLPF_CFG=3 (41Hz gyro BW to cut motor vibration).
+- **IBusReceiverDriver** — i-BUS serial at 115200 baud on UART2/GPIO16. 32-byte frame, checksum verified, 100ms signal-loss timeout.
+- **PWMESP32Motors** — LEDC 250Hz/12-bit. µs→duty via `usToDuty()`. Using arduino-esp32 **2.0.17** (old API: `ledcSetup`/`ledcAttachPin`/`ledcWrite(channel, duty)`).
+- **ADCBatteryMonitor** — EMA filter (α=0.05), 20-sample warmup on init, `std::atomic<float>` for cross-core read safety. Single writer: Battery Task on Core 0.
+- **QMC5883LCompass** — I2C auxiliary sensor. Present and initialized but **not used in the flight loop**.
+
+### Web Dashboard (`src/network/`)
+SoftAP `ESP32_Drone_Config` / `12345678` → `http://192.168.4.1/`. Active only when **DISARMED**; Wi-Fi is fully shut down on arm.
+
+| Endpoint | Function |
+|---|---|
+| `GET /` | Embedded HTML dashboard |
+| `GET /api/pid` | Read current PID gains (NVS or defaults) |
+| `POST /api/pid` | Write PID gains to NVS (validated 0–20) |
+| `GET /api/receiver` | Live RC channel values |
+| `POST /api/receiver` | Virtual joystick override (disarmed only) |
+| `POST /api/motor` | Safe motor test (capped 1000–1150µs) |
+| `GET /api/log` | CSV export of RAM blackbox (500 entries @ 50Hz = 10s) |
+
+### FreeRTOS Tasks
+| Task | Core | Priority | Role |
+|---|---|---|---|
+| Battery Task | 0 | 1 | `ADCBatteryMonitor::update()` + GPIO 2 LED blink |
+| Web Task | 0 | 1 | `WebDashboardServer::handleClient()` when disarmed |
+| Flight Task | 1 | 2 | `FlightController::update(0.004f)` at 250Hz |
 
 ---
 
-## Verification & Testing
-- **Target Verification**: Compiled the entire codebase via PlatformIO for target ESP32 Dev Module.
-  - **Outcome**: `[SUCCESS] Took 9.20 seconds`. Zero compilation warnings or errors.
-- **Native Unit Tests**: `pio test -e native` — `[PASSED] Took 4.05 seconds`.
+## Audit Fixes Applied (Sessions 2–3)
+
+| Priority | Issue | Fix |
+|---|---|---|
+| P0 | `lib/drone_core/` duplicated `src/core/` causing potential double-symbol compile | Deleted `lib/drone_core/`, sole source is `src/core/` |
+| P0 | Data race: `readVoltage()` had side-effects via `mutable float` on two cores | `std::atomic<float>`, separated `update()` (writer, Core 0) from `readVoltage()` (reader, any core) |
+| P1 | LEDC duty cycle used raw µs as duty count (factor ~1024 wrong) | Added `usToDuty()` helper: `(µs × 4096) / 4000` |
+| P1 | Loop timer reset to `micros()` each iteration causing accumulated jitter | Changed to `loopTimer += kPeriodUs` (fixed-interval advance) |
+| P1 | Signal-loss timeout magic numbers `> 1000` and `> 10` | Named constants `SIGNAL_LOSS_TIMEOUT_MS=100`, `FRAME_GAP_TIMEOUT_MS=10` |
+| P1 | `ARM_CHANNEL`/`ARM_THRESHOLD` private in FlightController but re-hardcoded in 3 dashboard places | Promoted to `public` in `FlightController.h`; dashboard uses `FlightController::ARM_CHANNEL/ARM_THRESHOLD` |
+| P2 | Arm accepted regardless of throttle position (could arm at high throttle) | Added gate: arm only when throttle < `THROTTLE_IDLE_LIMIT` (1050µs) |
+| P2 | Dead `PPMReceiver.h/.cpp` (project uses i-BUS, not PPM) + stale `dimag0g/PPM-reader` lib_dep | Deleted files, removed lib_dep from `platformio.ini` |
+| P2 | `ledcSetup()` deprecation concern | Investigated: installed framework is arduino-esp32 **2.0.17** — old API is correct, no change needed |
+| P3 | Magic numbers throughout `FlightController.cpp` (15 raw constants) | All moved to named `static constexpr` in `FlightController.h` |
+| P3 | PID defaults defined separately in `FlightController`, `FlightControllerPID`, and `WebDashboardHandlers` | Single source: `kDefaultRate/Yaw/AngleKp/Ki/Kd` as public constants in `FlightController.h` |
+| P3 | `3.14159f` in `MPU6500IMU.cpp` | Replaced with `kRadToDeg = 57.2957795f` constexpr |
+| P3 | `400.0f` PID clamp hardcoded 8 times | Named `kOutputLimit = 400.0f` in `PIDController.h` |
+
+---
+
+## Known Gap
+
+**No in-flight battery failsafe** — `FlightController::update()` never reads `battery_`. The battery drives only the LED blink in Battery Task. A low-voltage motor cutoff was intentionally removed (see earlier session) to prevent mid-air shutdown from transient voltage sag. If an audible/visual alarm plus a graceful land sequence is needed in the future, it would be a new feature, not a bug fix.
+
+---
+
+## Test Coverage
+
+```
+pio test -e native  →  4 test cases | 59 assertions | 0 failed
+```
+
+| Test file | What it covers |
+|---|---|
+| `test_pid.cpp` | P/I/D terms, anti-windup clamp, D-on-measurement, D-term LPF |
+| `test_kalman.cpp` | Kalman predict/update, convergence |
+| `test_simulation.cpp` | SimulatedHardware overrides and telemetry injection |
+| `test_flight_controller.cpp` | Idle cutoff, arm-refused-on-high-throttle, motor mixing, motor min-clamping, PPM failsafe |
 
 ---
 
 ## Next Steps
-1. **Flash Firmware**: Connect ESP32 to the PC and flash the compiled `firmware.bin` via USB.
-2. **First Power-Up & Web Config**:
-   - Turn on the transmitter (Flysky) and make sure AUX1 is in the low position (DISARMED).
-   - Power up the drone. Connect your PC/phone to the Wi-Fi access point `ESP32_Drone_Config` (password: `12345678`).
-   - Open a browser and go to `http://192.168.4.1/`.
-   - Verify transmitter stick movements in the Receiver tab.
-   - Run a Motor Test (at 1050-1100us) to verify correct rotation direction of each motor.
-3. **Flight Test & PID Copy-Paste**:
-   - Arm the drone via AUX1 (Wi-Fi will shut down automatically).
-   - Perform a short hover test (10-20 seconds).
-   - Land and Disarm the drone.
-   - Reconnect to the Wi-Fi AP, open the dashboard, click **Fetch CSV Log**, copy the text, and paste it to the AI chat to get optimized PID recommendations!
-4. **Tuning and Hardware Additions**:
-   - Consider connecting an active buzzer (5V) to the LED alarm pin (GPIO 2) or a dedicated pin to alert you audibly when battery drops below 9.0V, as the built-in LED is invisible during high-altitude flights.
+
+1. **Flash**: `pio run -e esp32dev --target upload`
+2. **First power-up**:
+   - Transmitter on, AUX1 low (disarmed).
+   - Connect to `ESP32_Drone_Config` → `http://192.168.4.1/`.
+   - Receiver tab: verify all stick movements map correctly.
+   - Motor Test tab: spin each motor 1050–1100µs, confirm rotation direction.
+3. **Hover test**:
+   - Arm (AUX1 high, throttle at minimum). Wi-Fi shuts down automatically.
+   - Short 10–20s hover. Disarm.
+   - Reconnect to Wi-Fi, fetch CSV log, paste to AI for PID recommendations.
+4. **PID tuning starting point** (loaded from NVS on each arm):
+   - Rate: Kp=0.7, Ki=0.0, Kd=0.01
+   - Yaw: Kp=2.0, Ki=12.0, Kd=0.0
+   - Angle: Kp=1.5, Kd=0.0 (increase Kd only after stable hover confirmed)
+5. **Hardware note**: If upgrading to arduino-esp32 **3.0+**, migrate LEDC calls in `PWMESP32Motors.cpp`:
+   - `ledcSetup(i, freq, bits)` + `ledcAttachPin(pin, i)` → `ledcAttach(pin, freq, bits)`
+   - `ledcWrite(i, duty)` → `ledcWrite(pin, duty)`
