@@ -32,17 +32,19 @@ public:
     static constexpr float kDefaultAngleKp = 1.5f;
     static constexpr float kDefaultAngleKd = 0.0f; // D=0 on first flights to avoid noise
 
+    // Exposed so dashboard can mirror the arm condition without magic numbers
+    static constexpr int ARM_CHANNEL   = 4;
+    static constexpr int ARM_THRESHOLD = 1500; // AUX1 above this = armed
+
 private:
     // RC channel indices
     static constexpr int ROLL_CHANNEL     = 0;
     static constexpr int PITCH_CHANNEL    = 1;
     static constexpr int THROTTLE_CHANNEL = 2;
     static constexpr int YAW_CHANNEL      = 3;
-    static constexpr int ARM_CHANNEL      = 4;
 
     // RC thresholds and stick scaling
     static constexpr int   RC_CENTER          = 1500; // center stick µs
-    static constexpr int   ARM_THRESHOLD      = 1500; // AUX1 above this = armed
     static constexpr int   THROTTLE_IDLE_LIMIT = 1050; // below = idle, above = flying
     static constexpr float THROTTLE_MAX       = 1800.0f; // cap before motor mixing
     static constexpr float ROLL_SENSITIVITY   = 0.10f; // deg per µs from center

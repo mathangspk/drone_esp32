@@ -7,8 +7,8 @@ float PIDController::update(float error, float measurement, float dt) {
     float pTerm = kp_ * error;
 
     float newIterm = iterm_ + ki_ * (error + prevError_) * dt / 2.0f;
-    if (newIterm > 400.0f) newIterm = 400.0f;
-    else if (newIterm < -400.0f) newIterm = -400.0f;
+    if (newIterm > kOutputLimit) newIterm = kOutputLimit;
+    else if (newIterm < -kOutputLimit) newIterm = -kOutputLimit;
     iterm_ = newIterm;
 
     // D-on-measurement: negate to suppress derivative kick when setpoint changes
@@ -16,8 +16,8 @@ float PIDController::update(float error, float measurement, float dt) {
     dFiltered_ = dAlpha_ * dRaw + (1.0f - dAlpha_) * dFiltered_;
 
     float output = pTerm + iterm_ + dFiltered_;
-    if (output > 400.0f) output = 400.0f;
-    else if (output < -400.0f) output = -400.0f;
+    if (output > kOutputLimit) output = kOutputLimit;
+    else if (output < -kOutputLimit) output = -kOutputLimit;
 
     prevError_ = error;
     prevMeasurement_ = measurement;
@@ -28,15 +28,15 @@ float PIDController::update(float error, float prevError, float prevIterm, float
     float pTerm = kp_ * error;
 
     float newIterm = prevIterm + ki_ * (error + prevError) * dt / 2.0f;
-    if (newIterm > 400.0f) newIterm = 400.0f;
-    else if (newIterm < -400.0f) newIterm = -400.0f;
+    if (newIterm > kOutputLimit) newIterm = kOutputLimit;
+    else if (newIterm < -kOutputLimit) newIterm = -kOutputLimit;
     iterm_ = newIterm;
 
     float dTerm = (dt > 0.0f) ? kd_ * (error - prevError) / dt : 0.0f;
 
     float output = pTerm + iterm_ + dTerm;
-    if (output > 400.0f) output = 400.0f;
-    else if (output < -400.0f) output = -400.0f;
+    if (output > kOutputLimit) output = kOutputLimit;
+    else if (output < -kOutputLimit) output = -kOutputLimit;
 
     prevError_ = error;
     return output;

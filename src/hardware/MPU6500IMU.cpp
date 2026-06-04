@@ -46,8 +46,8 @@ void MPU6500IMU::readSensor() {
     float accY = static_cast<float>(ay) / ACCEL_SCALE;
     float accZ = static_cast<float>(az) / ACCEL_SCALE;
 
-    rollAngle_ = std::atan2(accY, std::sqrt(accX * accX + accZ * accZ)) * (180.0f / 3.14159f);
-    pitchAngle_ = -std::atan2(accX, std::sqrt(accY * accY + accZ * accZ)) * (180.0f / 3.14159f);
+    rollAngle_  =  std::atan2(accY, std::sqrt(accX * accX + accZ * accZ)) * kRadToDeg;
+    pitchAngle_ = -std::atan2(accX, std::sqrt(accY * accY + accZ * accZ)) * kRadToDeg;
 }
 #else
 MPU6500IMU::MPU6500IMU(uint8_t csPin) : cs_(csPin) {}

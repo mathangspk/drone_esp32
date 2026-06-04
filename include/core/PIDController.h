@@ -22,6 +22,8 @@ public:
     float getError() const { return prevError_; }
 
 private:
+    static constexpr float kOutputLimit = 400.0f; // motor mixing range ±400µs
+
     float kp_, ki_, kd_, dAlpha_;
     float prevError_ = 0.0f;
     float prevMeasurement_ = 0.0f;

@@ -72,7 +72,7 @@ void WebDashboardHandlers::handleGetReceiver(WebServer& server) {
 void WebDashboardHandlers::handleSetReceiver(WebServer& server) {
     if (!ppm_) { server.send(500, "text/plain", "Not initialized"); return; }
     bool act = server.arg("active") == "true";
-    if (act && ppm_->getChannel(4) > 1500) {
+    if (act && ppm_->getChannel(FlightController::ARM_CHANNEL) > FlightController::ARM_THRESHOLD) {
         server.send(200, "application/json", "{\"ok\":false,\"msg\":\"Cannot override: Transmitter is ARMED!\"}");
         return;
     }
@@ -92,7 +92,7 @@ void WebDashboardHandlers::handleMotorTest(WebServer& server) {
     int val = server.arg("value").toInt();
     if (val > 1150) val = 1150;
     if (val < 1000) val = 1000;
-    if (act && ppm_->getChannel(4) > 1500) {
+    if (act && ppm_->getChannel(FlightController::ARM_CHANNEL) > FlightController::ARM_THRESHOLD) {
         server.send(200, "application/json", "{\"ok\":false,\"msg\":\"Cannot override: Transmitter is ARMED!\"}");
         return;
     }

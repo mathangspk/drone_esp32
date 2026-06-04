@@ -64,6 +64,29 @@ TEST_CASE("FlightController core logic and failsafes") {
         CHECK_EQ(motors.getMotorOutput(3), expectedSpeed);
     }
 
+    SUBCASE("Motor minimum clamping: low throttle shifts all motors up to MOTOR_MIN_ARMED_US") {
+        imu.setOverride(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        imu.setOverrideActive(true);
+
+        // Arm with throttle at minimum
+        ppm.setOverride(0, 1500); ppm.setOverride(1, 1500);
+        ppm.setOverride(2, 1000);
+        ppm.setOverride(3, 1500); ppm.setOverride(4, 1600);
+        ppm.setOverrideActive(true);
+        fc.update(0.004f);
+
+        // Raise throttle just above idle cutoff (1060 > 1050).
+        // raw mixing: int(1.024 * 1060) = 1085, below MOTOR_MIN_ARMED_US=1180.
+        // Clamping shifts all motors up to 1180.
+        ppm.setOverride(2, 1060);
+        fc.update(0.004f);
+
+        CHECK_EQ(motors.getMotorOutput(0), 1180);
+        CHECK_EQ(motors.getMotorOutput(1), 1180);
+        CHECK_EQ(motors.getMotorOutput(2), 1180);
+        CHECK_EQ(motors.getMotorOutput(3), 1180);
+    }
+
     SUBCASE("Failsafe triggers on PPM receiver signal loss") {
         imu.setOverride(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         imu.setOverrideActive(true);

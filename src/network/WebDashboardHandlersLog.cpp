@@ -1,4 +1,5 @@
 #include "network/WebDashboardHandlers.h"
+#include "core/FlightController.h"
 
 FlightLogEntry WebDashboardHandlers::logBuffer_[WebDashboardHandlers::MAX_LOGS];
 int WebDashboardHandlers::logIndex_ = 0;
@@ -33,7 +34,7 @@ void WebDashboardHandlers::handleGetLog(WebServer& server) {
 }
 
 void WebDashboardHandlers::logFlightData(float rSp, float rAct, float pSp, float pAct, int16_t throttle) {
-    if (!ppm_ || ppm_->getChannel(4) <= 1500) return;
+    if (!ppm_ || ppm_->getChannel(FlightController::ARM_CHANNEL) <= FlightController::ARM_THRESHOLD) return;
 #ifndef NATIVE_BUILD
     if (xSemaphoreTake(logMutex_, 0) != pdTRUE) return; // skip if log is being read
 #endif

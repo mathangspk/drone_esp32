@@ -23,8 +23,9 @@ public:
     bool isOverrideActive() const override { return oActive_; }
 
 private:
-    static constexpr float GYRO_SCALE  = 65.5f;   // LSB/(deg/s) for ±500 dps (reg 0x1B=0x08)
+    static constexpr float GYRO_SCALE  = 65.5f;    // LSB/(deg/s) for ±500 dps (reg 0x1B=0x08)
     static constexpr float ACCEL_SCALE = 8192.0f;  // LSB/g for ±4 g            (reg 0x1C=0x08)
+    static constexpr float kRadToDeg   = 57.2957795f; // 180/π
 
     uint8_t cs_;
     float rollRate_ = 0.0f, pitchRate_ = 0.0f, yawRate_ = 0.0f;
