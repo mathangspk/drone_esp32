@@ -37,9 +37,9 @@ private:
     PIDController pitchRatePid_{0.7f, 0.0f, 0.01f, 0.5f};
     PIDController yawRatePid_{2.0f, 12.0f, 0.0f};
 
-    // Outer Angle PIDs
-    PIDController rollAnglePid_{1.5f, 0.0f, 0.6f, 0.5f};
-    PIDController pitchAnglePid_{1.5f, 0.0f, 0.6f, 0.5f};
+    // Outer Angle PIDs — D-term starts at 0 to avoid noise amplification on first flights
+    PIDController rollAnglePid_{1.5f, 0.0f, 0.0f, 0.5f};
+    PIDController pitchAnglePid_{1.5f, 0.0f, 0.0f, 0.5f};
 
     // Calibration Offsets
     float calRollRate_ = 0.0f;

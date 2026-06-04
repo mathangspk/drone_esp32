@@ -25,11 +25,15 @@ This document records the current progress, state, and next steps of the project
   - **Web Dashboard Controllers**: Implements PID tuning via ESP32 `Preferences` (NVS), safe motor testing (capped at 1150us), and formats CSV logs. Added **Joystick Overrides** to allow virtual joystick simulations over Wi-Fi when DISARMED.
   - **RAM Blackbox Logger**: Continuous 50Hz circular buffer logging of Roll/Pitch setpoints and actual values, throttle, and voltages, frozen on disarm for easy copy-pasting.
 - **Redraw Hardware Connection Diagram**: Updated [architecture.md](file:///c:/local/opencode/iot/esp32_drone/architecture.md) with a clear ASCII-art and tabular layout mapping ESP32 pinouts for MPU6500 (SPI), QMC5883L (I2C), Flysky i-BUS receiver (UART2), Voltage Monitor divider (GPIO 33), and LEDC ESC outputs (GPIO 25, 27, 4, 14).
+- **Algorithm Safety Fixes (4 bugs)**:
+  - **MPU6500 Init**: Added full device reset (`0x80→0x6B`), 100ms startup delays, and DLPF_CFG=3 (Gyro BW 41Hz) to filter motor vibration noise. Prevents wrong scale factor and gyro noise amplification.
+  - **Angle PID D-term**: Changed default `DAngleRoll` and `DAnglePitch` from `0.6` to `0.0` to prevent derivative noise amplification on first flights. Tunable via Web Dashboard.
+  - **Gyro Calibration**: Added `delayMicroseconds(1000)` between each sample to ensure 2000 genuinely independent IMU measurements instead of reading duplicate data.
 
 ---
 
 ## Current System State
-- **Compiling State**: The entire codebase compiles successfully for the `esp32dev` target! Flash usage is 63.3%, RAM usage is 17.8%.
+- **Compiling State**: The entire codebase compiles successfully for the `esp32dev` target! Flash usage is 63.6%, RAM usage is 17.8%.
 - **Testing**: All unit tests build and pass cleanly on the native compiler environment.
 - **Optimal Hardware Configuration**:
   - Drone Takeoff Weight: 800g (highly optimized).
@@ -40,7 +44,8 @@ This document records the current progress, state, and next steps of the project
 
 ## Verification & Testing
 - **Target Verification**: Verified by compiling the entire codebase via PlatformIO for target ESP32 Dev Module.
-  - **Outcome**: `[SUCCESS] Took 26.34 seconds`. Zero compilation warnings or errors.
+  - **Outcome**: `[SUCCESS] Took 7.13 seconds`. Zero compilation warnings or errors.
+- **Native Unit Tests**: `pio test -e native` — `[PASSED] Took 1.60 seconds`.
 
 ---
 

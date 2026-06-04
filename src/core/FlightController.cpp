@@ -20,6 +20,9 @@ void FlightController::calibrateGyro() {
         float r, p, y;
         imu_.getGyroRates(r, p, y);
         totalRoll += r; totalPitch += p; totalYaw += y;
+#ifndef NATIVE_BUILD
+        delayMicroseconds(1000); // Wait for next independent IMU sample
+#endif
     }
     calRollRate_ = totalRoll / static_cast<float>(kCalibrationSamples);
     calPitchRate_ = totalPitch / static_cast<float>(kCalibrationSamples);

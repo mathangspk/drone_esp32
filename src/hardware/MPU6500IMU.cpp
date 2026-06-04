@@ -12,8 +12,13 @@ void MPU6500IMU::begin() {
     SPI.begin(18, 19, 23, cs_);
     pinMode(cs_, OUTPUT);
     digitalWrite(cs_, HIGH);
-    writeReg(0x6B, 0x00); // Wake up
-    writeReg(0x19, 0x00); // Max sample rate
+    delay(10);
+    writeReg(0x6B, 0x80); // Device reset
+    delay(100);            // Wait for reset to complete
+    writeReg(0x6B, 0x00); // Wake up (internal 20MHz clock)
+    delay(100);            // Wait for oscillator to stabilize
+    writeReg(0x19, 0x00); // Sample rate divider = 0 (max rate)
+    writeReg(0x1A, 0x03); // DLPF_CFG=3: Gyro BW 41Hz, 5.9ms delay
     writeReg(0x1B, 0x08); // Gyro ±500dps
     writeReg(0x1C, 0x08); // Accel ±4g
 }

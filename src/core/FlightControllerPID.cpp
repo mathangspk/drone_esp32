@@ -7,7 +7,7 @@
 void FlightController::loadPIDGains() {
     float r_kp=0.7f, r_ki=0.0f, r_kd=0.01f, p_kp=0.7f, p_ki=0.0f, p_kd=0.01f;
     float y_kp=2.0f, y_ki=12.0f, y_kd=0.0f;
-    float ra_kp=1.5f, ra_kd=0.6f, pa_kp=1.5f, pa_kd=0.6f;
+    float ra_kp=1.5f, ra_kd=0.0f, pa_kp=1.5f, pa_kd=0.0f;
 
 #ifndef NATIVE_BUILD
     Preferences prefs;
