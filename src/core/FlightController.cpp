@@ -47,6 +47,7 @@ void FlightController::update(float dt) {
     bool isArmed = ppm_.getChannel(ARM_CHANNEL) > ARM_THRESHOLD;
     if (!isArmed) {
         if (wasArmed_) { reset(); wasArmed_ = false; }
+        motors_.writeMotors(1000, 1000, 1000, 1000);
         return;
     }
     if (!wasArmed_) {

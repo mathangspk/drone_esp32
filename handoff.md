@@ -1,9 +1,9 @@
 # Handoff
 
 ## Summary of Changes
+- Fixed disarmed motor override bug: Updated `FlightController::update` to call `motors_.writeMotors` even when disarmed, allowing the ESCs to initialize and receive continuous override signals when using the Web Dashboard Motor Test.
 - Added an IMU telemetry endpoint (`/api/imu`) to `WebDashboardServer` to return raw Accelerometer Angles and Gyroscope Rates.
 - Updated the HTML/JS dashboard (`WebDashboardPage.h`) to display the IMU telemetry in a new "IMU Sensor Monitor" card.
-- The Motor Test functionality was already implemented in previous phases; guided the user on how to use it.
 
 ## Current System State
 - Drone boots normally.
@@ -17,3 +17,4 @@
 ## Next Steps
 - User to test the web dashboard's IMU monitor by tilting the drone.
 - User to test the motors using the Motor Test section (ensure props are removed!).
+
