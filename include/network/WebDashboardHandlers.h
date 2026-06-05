@@ -47,7 +47,6 @@ public:
     static void handleMotorTest(WebServer& server);
     static void handleGetIMU(WebServer& server);
     static void handleGetLog(WebServer& server);
-    static void handleESCCalibration(WebServer& server);
 
     static void logFlightData(float rSp, float rAct, float pSp, float pAct,
                               float ySp, float yAct, int16_t throttle,

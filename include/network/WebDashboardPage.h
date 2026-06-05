@@ -68,19 +68,6 @@ textarea { width: 100%; height: 150px; background: #222; color: #00ff00; border:
   </div>
 </div>
 <div class="card">
-  <h2>ESC Calibration</h2>
-  <div style="font-size:0.9em; line-height:1.4; color:#aaa; margin-bottom:10px;">
-    1. Disconnect the flight battery.<br>
-    2. Click 'Send MAX' (2000µs).<br>
-    3. Connect the flight battery. Wait for ESC beeps.<br>
-    4. Click 'Send MIN' (1000µs). Wait for ESC arming tunes.<br>
-    5. Click 'Finish' to exit calibration mode.
-  </div>
-  <button type="button" onclick="calibrate('high')">1. Send MAX (2000µs)</button>
-  <button type="button" onclick="calibrate('low')" style="background:#ff9800; margin-left:10px;">2. Send MIN (1000µs)</button>
-  <button type="button" onclick="calibrate('stop')" style="background:#2196f3; color:#fff; margin-left:10px;">3. Finish Calibration</button>
-</div>
-<div class="card">
   <h2>Flight Data Log (CSV)</h2>
   <button onclick="loadLog()">Fetch CSV Log</button>
   <button onclick="copyLog()" style="margin-left:10px;">Copy to Clipboard</button><br><br>
@@ -129,9 +116,6 @@ function toggleMTest(){
 function setMotor(idx, val){
   if(!document.getElementById('mTest').checked) return;
   post('/api/motor', {active: true, motorIdx: idx, value: parseInt(val)}, r=>{});
-}
-function calibrate(step){
-  post('/api/calibrate', {step: step}, r=>{ if(r.ok) alert('Step ' + step + ' sent!'); else alert(r.msg); });
 }
 function loadLog(){ fetch('/api/log').then(r=>r.text()).then(t=>{ document.getElementById('logBox').value=t; }); }
 function copyLog(){
