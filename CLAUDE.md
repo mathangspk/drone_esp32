@@ -62,7 +62,7 @@ PID gains load from ESP32 NVS (`Preferences`) at arm-time via `loadPIDGains()`, 
 
 `WebDashboardServer` creates a SoftAP (`ESP32_Drone_Config`, password `12345678`) at `http://192.168.4.1/`. Wi-Fi is fully shut down when the drone arms. The dashboard supports live receiver monitoring, safe motor testing (capped at 1150µs), PID tuning (persisted to NVS), and CSV log export from the RAM blackbox (50Hz circular buffer, frozen on disarm).
 
-## Coding Standards (from agent.md)
+## Coding Standards (from agent.md & ESP32_CODING_STANDARDS_EN.md)
 
 **Strict 100-line limit per file** — if a `.h` or `.cpp` file approaches 100 lines, split it into smaller single-responsibility units (see `FlightController.cpp` + `FlightControllerPID.cpp` as an example).
 
@@ -73,6 +73,13 @@ PID gains load from ESP32 NVS (`Preferences`) at arm-time via `loadPIDGains()`, 
 - No `throw` on embedded targets — use boolean returns or `std::optional`
 - Prefer stack allocation and pass-by-const-reference; use smart pointers if heap is needed
 - Comments explain **why**, not what
+
+**ESP32 Firmware Mandates:**
+You MUST adhere to the standards outlined in `ESP32_CODING_STANDARDS_EN.md`:
+- **Zero Blocking**: Never use `delay()`. Use `vTaskDelay()` or state machines.
+- **No Dynamic Strings**: Never use the Arduino `String` class. Use `char[]`.
+- **Strict ISR Rules**: ISRs must be extremely short, use `IRAM_ATTR`, and only call `FromISR` APIs.
+- **Error Handling**: You must check `esp_err_t` return values.
 
 ## TDD Workflow
 

@@ -45,6 +45,7 @@ public:
     static void handleGetReceiver(WebServer& server);
     static void handleSetReceiver(WebServer& server);
     static void handleMotorTest(WebServer& server);
+    static void handleCalibrateESC(WebServer& server);
     static void handleGetIMU(WebServer& server);
     static void handleGetLog(WebServer& server);
 

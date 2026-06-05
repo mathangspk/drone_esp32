@@ -104,6 +104,30 @@ void WebDashboardHandlers::handleMotorTest(WebServer& server) {
     server.send(200, "application/json", "{\"ok\":true}");
 }
 
+void WebDashboardHandlers::handleCalibrateESC(WebServer& server) {
+    if (!ppm_ || !motors_) { server.send(500, "text/plain", "Not initialized"); return; }
+    
+    // Safety check: only allow calibration if drone is DISARMED
+    if (ppm_->getChannel(FlightController::ARM_CHANNEL) > FlightController::ARM_THRESHOLD) {
+        server.send(200, "application/json", "{\"ok\":false,\"msg\":\"Cannot calibrate: Transmitter is ARMED!\"}");
+        return;
+    }
+    
+    String cmd = server.arg("cmd");
+    if (cmd == "max") {
+        for (int i = 0; i < 4; i++) motors_->setOverride(i, 2000, true);
+    } else if (cmd == "min") {
+        for (int i = 0; i < 4; i++) motors_->setOverride(i, 1000, true);
+    } else if (cmd == "finish") {
+        for (int i = 0; i < 4; i++) motors_->setOverride(i, 1000, false);
+    } else {
+        server.send(200, "application/json", "{\"ok\":false,\"msg\":\"Invalid command\"}");
+        return;
+    }
+    
+    server.send(200, "application/json", "{\"ok\":true}");
+}
+
 void WebDashboardHandlers::handleGetIMU(WebServer& server) {
     if (!imu_) { server.send(500, "text/plain", "Not initialized"); return; }
     

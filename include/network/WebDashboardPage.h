@@ -67,6 +67,15 @@ textarea { width: 100%; height: 150px; background: #222; color: #00ff00; border:
     M4: <input type="range" min="1000" max="1150" value="1000" id="m4" oninput="setMotor(3, this.value)">
   </div>
 </div>
+<div class="card" style="border: 1px solid #ff3333;">
+  <h2 style="color: #ff3333;">ESC Calibration (DANGER)</h2>
+  <label><input type="checkbox" id="calibSafety" onchange="toggleCalib()"> Tôi xác nhận đã tháo toàn bộ cánh quạt</label>
+  <div id="calibBtns" style="display:none; margin-top:10px;" class="row">
+    <button type="button" onclick="calibrateESC('max')" style="background:#ff3333; color:#fff;">Gửi 2000us</button>
+    <button type="button" onclick="calibrateESC('min')">Gửi 1000us</button>
+    <button type="button" onclick="calibrateESC('finish')">Kết thúc & Thoát</button>
+  </div>
+</div>
 <div class="card">
   <h2>Flight Data Log (CSV)</h2>
   <button onclick="loadLog()">Fetch CSV Log</button>
@@ -116,6 +125,13 @@ function toggleMTest(){
 function setMotor(idx, val){
   if(!document.getElementById('mTest').checked) return;
   post('/api/motor', {active: true, motorIdx: idx, value: parseInt(val)}, r=>{});
+}
+function toggleCalib(){
+  document.getElementById('calibBtns').style.display = document.getElementById('calibSafety').checked ? 'flex' : 'none';
+}
+function calibrateESC(cmd){
+  if(!document.getElementById('calibSafety').checked) return;
+  post('/api/calibrate', {cmd: cmd}, r=>{ if(!r.ok) alert(r.msg); });
 }
 function loadLog(){ fetch('/api/log').then(r=>r.text()).then(t=>{ document.getElementById('logBox').value=t; }); }
 function copyLog(){
